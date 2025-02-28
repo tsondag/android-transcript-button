@@ -21,7 +21,7 @@
         android:theme="@style/Theme.AudioRecorder">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".VoiceMemoActivity"
             android:exported="true"
             android:theme="@style/Theme.AudioRecorder">
             <intent-filter>

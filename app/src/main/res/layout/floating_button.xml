@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="4dp">
+
+    <!-- Main container for better touch area -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <!-- Floating button -->
+        <ImageButton
+            android:id="@+id/floating_button"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@drawable/round_button_background"
+            android:src="@drawable/ic_mic"
+            android:contentDescription="Record audio"
+            android:padding="16dp" />
+
+        <!-- Transcription text -->
+        <TextView
+            android:id="@+id/transcription_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/text_background"
+            android:padding="8dp"
+            android:maxWidth="300dp"
+            android:maxLines="3"
+            android:ellipsize="end"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:visibility="gone" />
+    </LinearLayout>
+</FrameLayout> 
