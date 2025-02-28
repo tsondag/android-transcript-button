@@ -36,7 +36,7 @@ class VoiceMemoActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         voiceRecordingService = VoiceRecordingService(this)
-        transcriptionService = TranscriptionService()
+        transcriptionService = TranscriptionService(this)
 
         setupToolbar()
         setupTranscriptList()

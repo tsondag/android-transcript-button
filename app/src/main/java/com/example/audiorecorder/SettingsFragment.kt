@@ -1,6 +1,7 @@
 package com.example.audiorecorder
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
@@ -16,6 +17,7 @@ import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.example.audiorecorder.databinding.FragmentSettingsBinding
 import com.example.audiorecorder.service.FloatingButtonService
+import com.example.audiorecorder.utils.AccessibilityUtils
 import com.example.audiorecorder.utils.Logger
 
 class SettingsFragment : Fragment() {
@@ -23,6 +25,9 @@ class SettingsFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var prefs: SharedPreferences
     private var isFloatingButtonVisible = false
+    private var isAutoCopyEnabled = false
+    private var isAutoInsertEnabled = false
+    private var isAutoDetectLanguageEnabled = false
 
     private val requestAudioPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -52,6 +57,9 @@ class SettingsFragment : Fragment() {
         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
         prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
         isFloatingButtonVisible = prefs.getBoolean(PREF_FLOATING_BUTTON_VISIBLE, false)
+        isAutoCopyEnabled = prefs.getBoolean(PREF_AUTO_COPY_ENABLED, false)
+        isAutoInsertEnabled = prefs.getBoolean(PREF_AUTO_INSERT_ENABLED, false)
+        isAutoDetectLanguageEnabled = prefs.getBoolean(PREF_AUTO_DETECT_LANGUAGE, true) // Default to true
         return binding.root
     }
 
@@ -63,6 +71,9 @@ class SettingsFragment : Fragment() {
         setupOverlayPermissionButton()
         setupNotificationPermissionButton()
         setupFloatingButtonToggle()
+        setupAutoCopySwitch()
+        setupAutoInsertSwitch()
+        setupAutoDetectLanguageSwitch()
 
         // Restore floating button state if it was visible
         if (isFloatingButtonVisible && hasRequiredPermissions()) {
@@ -132,6 +143,112 @@ class SettingsFragment : Fragment() {
             toggleFloatingButton()
         }
         updateFloatingButtonToggle()
+    }
+
+    private fun setupAutoCopySwitch() {
+        binding.autoCopySwitch.isChecked = isAutoCopyEnabled
+        binding.autoCopySwitch.setOnCheckedChangeListener { _, isChecked ->
+            Logger.ui("Auto-copy switch toggled: $isChecked")
+            isAutoCopyEnabled = isChecked
+            prefs.edit().putBoolean(PREF_AUTO_COPY_ENABLED, isChecked).apply()
+            
+            // Show confirmation toast
+            val message = if (isChecked) {
+                "Transcripts will be automatically copied to clipboard"
+            } else {
+                "Auto-copy disabled"
+            }
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun setupAutoInsertSwitch() {
+        binding.autoInsertSwitch.isChecked = isAutoInsertEnabled
+        
+        // Update accessibility service status text
+        updateAccessibilityServiceStatus()
+        
+        // Setup accessibility settings button
+        binding.accessibilitySettingsButton.setOnClickListener {
+            Logger.ui("Accessibility settings button clicked")
+            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+            startActivity(intent)
+        }
+        
+        // Setup auto-insert switch
+        binding.autoInsertSwitch.setOnCheckedChangeListener { _, isChecked ->
+            Logger.ui("Auto-insert switch toggled: $isChecked")
+            
+            if (isChecked && !AccessibilityUtils.isAccessibilityServiceEnabled(requireContext())) {
+                // If trying to enable but accessibility service is not enabled
+                Toast.makeText(
+                    requireContext(),
+                    "Please enable the accessibility service first",
+                    Toast.LENGTH_LONG
+                ).show()
+                
+                // Reset the switch
+                binding.autoInsertSwitch.isChecked = false
+                return@setOnCheckedChangeListener
+            }
+            
+            isAutoInsertEnabled = isChecked
+            prefs.edit().putBoolean(PREF_AUTO_INSERT_ENABLED, isChecked).apply()
+            
+            // Show confirmation toast
+            val message = if (isChecked) {
+                "Transcripts will be automatically inserted into input fields"
+            } else {
+                "Auto-insert disabled"
+            }
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun setupAutoDetectLanguageSwitch() {
+        binding.autoDetectLanguageSwitch.isChecked = isAutoDetectLanguageEnabled
+        binding.autoDetectLanguageSwitch.setOnCheckedChangeListener { _, isChecked ->
+            Logger.ui("Auto-detect language switch toggled: $isChecked")
+            isAutoDetectLanguageEnabled = isChecked
+            prefs.edit().putBoolean(PREF_AUTO_DETECT_LANGUAGE, isChecked).apply()
+            
+            // Show confirmation toast
+            val message = if (isChecked) {
+                "Language will be auto-detected without translation"
+            } else {
+                "English transcription enabled"
+            }
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun updateAccessibilityServiceStatus() {
+        val isServiceEnabled = AccessibilityUtils.isAccessibilityServiceEnabled(requireContext())
+        
+        binding.accessibilityServiceStatus.text = if (isServiceEnabled) {
+            "Accessibility service enabled"
+        } else {
+            "Accessibility service required"
+        }
+        
+        binding.accessibilityServiceStatus.setTextColor(
+            requireContext().getColor(
+                if (isServiceEnabled) R.color.text_success else R.color.text_secondary
+            )
+        )
+        
+        binding.accessibilitySettingsButton.text = if (isServiceEnabled) {
+            "Accessibility Settings"
+        } else {
+            "Enable Accessibility Service"
+        }
+        
+        // Disable auto-insert if accessibility service is not enabled
+        if (!isServiceEnabled && binding.autoInsertSwitch.isChecked) {
+            binding.autoInsertSwitch.isChecked = false
+            isAutoInsertEnabled = false
+            prefs.edit().putBoolean(PREF_AUTO_INSERT_ENABLED, false).apply()
+        }
     }
 
     private fun toggleFloatingButton() {
@@ -209,6 +326,7 @@ class SettingsFragment : Fragment() {
         updateOverlayPermissionButton()
         updateNotificationPermissionButton()
         updateFloatingButtonToggle()
+        updateAccessibilityServiceStatus()
     }
 
     override fun onDestroyView() {
@@ -218,5 +336,32 @@ class SettingsFragment : Fragment() {
 
     companion object {
         private const val PREF_FLOATING_BUTTON_VISIBLE = "floating_button_visible"
+        private const val PREF_AUTO_COPY_ENABLED = "auto_copy_enabled"
+        private const val PREF_AUTO_INSERT_ENABLED = "auto_insert_enabled"
+        private const val PREF_AUTO_DETECT_LANGUAGE = "auto_detect_language"
+        
+        /**
+         * Check if auto-copy is enabled in preferences
+         */
+        fun isAutoCopyEnabled(context: Context): Boolean {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+            return prefs.getBoolean(PREF_AUTO_COPY_ENABLED, false)
+        }
+        
+        /**
+         * Check if auto-insert is enabled in preferences
+         */
+        fun isAutoInsertEnabled(context: Context): Boolean {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+            return prefs.getBoolean(PREF_AUTO_INSERT_ENABLED, false)
+        }
+        
+        /**
+         * Check if auto-detect language is enabled in preferences
+         */
+        fun isAutoDetectLanguageEnabled(context: Context): Boolean {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+            return prefs.getBoolean(PREF_AUTO_DETECT_LANGUAGE, true) // Default to true
+        }
     }
 } 

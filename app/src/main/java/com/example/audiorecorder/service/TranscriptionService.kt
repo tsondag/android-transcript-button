@@ -1,5 +1,7 @@
 package com.example.audiorecorder.service
 
+import android.content.Context
+import com.example.audiorecorder.SettingsFragment
 import com.example.audiorecorder.utils.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -12,7 +14,7 @@ import org.json.JSONObject
 import java.io.File
 import java.io.IOException
 
-class TranscriptionService {
+class TranscriptionService(private val context: Context) {
     private val client = OkHttpClient.Builder().build()
     
     suspend fun transcribeAudio(audioFile: File): Result<String> = withContext(Dispatchers.IO) {
@@ -45,15 +47,29 @@ class TranscriptionService {
                 return@withContext Result.failure(error)
             }
 
+            // Check if auto-detect language is enabled
+            val isAutoDetectLanguageEnabled = SettingsFragment.isAutoDetectLanguageEnabled(context)
+            Logger.api("Auto-detect language enabled: $isAutoDetectLanguageEnabled")
+
             // Create multipart request
-            val requestBody = MultipartBody.Builder()
+            val requestBodyBuilder = MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart(
                     "file",
                     audioFile.name,
                     audioFile.asRequestBody("audio/m4a".toMediaType())
                 )
-                .build()
+                .addFormDataPart("model_id", "scribe_v1")
+            
+            // Only add language_code if auto-detect is disabled
+            if (!isAutoDetectLanguageEnabled) {
+                requestBodyBuilder.addFormDataPart("language_code", "en")
+                Logger.api("Using fixed language code: en")
+            } else {
+                Logger.api("Using auto-detect language (no language_code parameter)")
+            }
+            
+            val requestBody = requestBodyBuilder.build()
 
             Logger.api("Preparing API request to transcription service")
             Logger.api("API URL: $TRANSCRIPTION_API_URL")
@@ -91,7 +107,9 @@ class TranscriptionService {
                 try {
                     val json = JSONObject(responseBody)
                     val transcript = json.getString("transcript")
+                    val detectedLanguage = json.optString("language_code", "unknown")
                     Logger.transcript("Successfully parsed transcript (${transcript.length} characters)")
+                    Logger.transcript("Detected language: $detectedLanguage")
                     Logger.transcript("Transcript content: ${transcript.take(100)}${if (transcript.length > 100) "..." else ""}")
                     
                     // Save the transcript to a file

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Audio Recorder</string>
+    <string name="accessibility_service_description">Allows the app to automatically insert transcribed text into input fields. This is used for the Auto-Insert feature.</string>
 </resources> 

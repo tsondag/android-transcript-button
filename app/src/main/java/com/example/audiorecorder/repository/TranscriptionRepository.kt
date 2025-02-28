@@ -1,6 +1,8 @@
 package com.example.audiorecorder.repository
 
+import android.content.Context
 import android.util.Log
+import com.example.audiorecorder.SettingsFragment
 import com.example.audiorecorder.api.ApiClient
 import com.example.audiorecorder.api.TranscriptionResponse
 import kotlinx.coroutines.Dispatchers
@@ -11,7 +13,7 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 
-class TranscriptionRepository {
+class TranscriptionRepository(private val context: Context) {
     private val TAG = "TranscriptionRepository"
 
     suspend fun transcribeAudioFile(audioFile: File): Result<TranscriptionResponse> = withContext(Dispatchers.IO) {
@@ -31,22 +33,38 @@ class TranscriptionRepository {
             }
             
             val requestFile = audioFile.asRequestBody("audio/mp3".toMediaType())
-            val parts = listOf(
+            
+            // Check if auto-detect language is enabled
+            val isAutoDetectLanguageEnabled = SettingsFragment.isAutoDetectLanguageEnabled(context)
+            Log.d(TAG, "Auto-detect language enabled: $isAutoDetectLanguageEnabled")
+            
+            // Create parts list based on language setting
+            val parts = mutableListOf(
                 MultipartBody.Part.createFormData("file", audioFile.name, requestFile),
-                MultipartBody.Part.createFormData("model_id", "scribe_v1"),
-                MultipartBody.Part.createFormData("language_code", "en")
+                MultipartBody.Part.createFormData("model_id", "scribe_v1")
             )
+            
+            // Only add language_code if auto-detect is disabled
+            if (!isAutoDetectLanguageEnabled) {
+                parts.add(MultipartBody.Part.createFormData("language_code", "en"))
+                Log.d(TAG, "Using fixed language code: en")
+            } else {
+                Log.d(TAG, "Using auto-detect language (no language_code parameter)")
+            }
             
             Log.d(TAG, "Making API request with parameters:")
             Log.d(TAG, "- File name: ${audioFile.name}")
             Log.d(TAG, "- Model ID: scribe_v1")
-            Log.d(TAG, "- Language code: en")
+            if (!isAutoDetectLanguageEnabled) {
+                Log.d(TAG, "- Language code: en")
+            }
             
             val response = ApiClient.elevenLabsApi.transcribeAudio(parts)
             
             if (response.isSuccessful) {
                 response.body()?.let {
                     Log.d(TAG, "Transcription successful: ${it.text}")
+                    Log.d(TAG, "Detected language: ${it.language ?: "unknown"}")
                     Result.success(it)
                 } ?: run {
                     Log.e(TAG, "Empty response body")

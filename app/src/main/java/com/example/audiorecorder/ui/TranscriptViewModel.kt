@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 class TranscriptViewModel(application: Application) : AndroidViewModel(application) {
-    private val transcriptionService = TranscriptionService()
+    private val transcriptionService = TranscriptionService(application)
     private val _transcripts = MutableStateFlow<List<TranscriptItem>>(emptyList())
     val transcripts: StateFlow<List<TranscriptItem>> = _transcripts.asStateFlow()
 

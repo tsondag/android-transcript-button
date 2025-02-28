@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
 
     <application
         android:name=".AudioRecorderApp"
@@ -35,5 +36,30 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
+            
+        <!-- Accessibility Service for auto-insert feature -->
+        <service
+            android:name=".service.TranscriptAccessibilityService"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+            
+        <!-- Broadcast Receiver for handling copy to clipboard actions -->
+        <receiver
+            android:name=".receivers.CopyTranscriptReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.audiorecorder.action.COPY_TRANSCRIPT" />
+                <action android:name="com.example.audiorecorder.action.INSERT_TRANSCRIPT" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest> 
