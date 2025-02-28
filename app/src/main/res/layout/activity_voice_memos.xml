@@ -52,16 +52,4 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- FAB for recording -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/recordButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:contentDescription="Record"
-        app:srcCompat="@drawable/ic_mic"
-        app:backgroundTint="@color/colorPrimary"
-        app:tint="@color/white"/>
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout> 
