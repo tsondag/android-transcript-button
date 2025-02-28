@@ -15,6 +15,13 @@ class TranscriptViewModel(application: Application) : AndroidViewModel(applicati
     private val transcriptionService = TranscriptionService(application)
     private val _transcripts = MutableStateFlow<List<TranscriptItem>>(emptyList())
     val transcripts: StateFlow<List<TranscriptItem>> = _transcripts.asStateFlow()
+    
+    // Search state
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+    
+    private val _filteredTranscripts = MutableStateFlow<List<TranscriptItem>>(emptyList())
+    val filteredTranscripts: StateFlow<List<TranscriptItem>> = _filteredTranscripts.asStateFlow()
 
     init {
         loadRecordings()
@@ -23,6 +30,28 @@ class TranscriptViewModel(application: Application) : AndroidViewModel(applicati
     fun refreshTranscripts() {
         Logger.ui("Refreshing transcripts list")
         loadRecordings()
+    }
+    
+    fun setSearchQuery(query: String) {
+        Logger.ui("Setting search query: '$query'")
+        _searchQuery.value = query
+        updateFilteredTranscripts()
+    }
+    
+    private fun updateFilteredTranscripts() {
+        val query = _searchQuery.value
+        val allTranscripts = _transcripts.value
+        
+        _filteredTranscripts.value = if (query.isBlank()) {
+            allTranscripts
+        } else {
+            allTranscripts.filter { item ->
+                item.transcript?.contains(query, ignoreCase = true) == true ||
+                item.file.nameWithoutExtension.contains(query, ignoreCase = true)
+            }
+        }
+        
+        Logger.ui("Filtered transcripts: ${_filteredTranscripts.value.size} of ${allTranscripts.size}")
     }
 
     private fun loadRecordings() {
@@ -35,16 +64,12 @@ class TranscriptViewModel(application: Application) : AndroidViewModel(applicati
                 if (recordingsDir == null || !recordingsDir.exists()) {
                     Logger.ui("Recordings directory does not exist")
                     _transcripts.value = emptyList()
+                    updateFilteredTranscripts()
                     return@launch
                 }
                 
                 val files = recordingsDir.listFiles()
                 Logger.ui("Found ${files?.size ?: 0} total files in directory")
-                
-                // Log all files for debugging
-                files?.forEach { file ->
-                    Logger.ui("File found: ${file.name} (${file.length()} bytes, last modified: ${java.util.Date(file.lastModified())})")
-                }
                 
                 val audioAndTranscriptFiles = files?.filter { file ->
                     file.extension == "m4a" || file.extension == "txt"
@@ -52,19 +77,9 @@ class TranscriptViewModel(application: Application) : AndroidViewModel(applicati
                 
                 Logger.ui("Found ${audioAndTranscriptFiles.count { it.extension == "m4a" }} audio files and ${audioAndTranscriptFiles.count { it.extension == "txt" }} transcript files")
                 
-                // Log audio and transcript files
-                audioAndTranscriptFiles.forEach { file ->
-                    Logger.ui("Audio/Transcript file: ${file.name} (${file.extension})")
-                }
-                
                 // Group files by base name
                 val groupedFiles = audioAndTranscriptFiles.groupBy { it.nameWithoutExtension }
                 Logger.ui("Grouped files into ${groupedFiles.size} sets by base name")
-                
-                // Log grouped files
-                groupedFiles.forEach { (baseName, files) ->
-                    Logger.ui("Group '$baseName': ${files.map { it.extension }}")
-                }
                 
                 val recordings = groupedFiles
                     .mapNotNull { (name, files) ->
@@ -105,9 +120,11 @@ class TranscriptViewModel(application: Application) : AndroidViewModel(applicati
                 Logger.ui("Found ${recordings.count { it.transcript != null }} recordings with transcripts")
                 
                 _transcripts.value = recordings
+                updateFilteredTranscripts()
             } catch (e: Exception) {
                 Logger.ui("Error loading recordings", e)
                 _transcripts.value = emptyList()
+                updateFilteredTranscripts()
             }
         }
     }
@@ -137,6 +154,7 @@ class TranscriptViewModel(application: Application) : AndroidViewModel(applicati
         if (index != -1) {
             currentList[index] = item.copy(transcript = transcript)
             _transcripts.value = currentList
+            updateFilteredTranscripts()
             Logger.ui("Updated transcript for ${item.file.name}")
         }
     }
@@ -158,8 +176,16 @@ class TranscriptViewModel(application: Application) : AndroidViewModel(applicati
                 )
                 
                 val currentList = _transcripts.value.toMutableList()
+                // Remove existing item with the same file path if it exists
+                val existingIndex = currentList.indexOfFirst { it.file.absolutePath == file.absolutePath }
+                if (existingIndex != -1) {
+                    currentList.removeAt(existingIndex)
+                }
+                
+                // Add the new transcript at the beginning
                 currentList.add(0, newTranscript)
                 _transcripts.value = currentList
+                updateFilteredTranscripts()
                 Logger.ui("Added new transcript to list: ${transcript.take(50)}...")
             } catch (e: Exception) {
                 Logger.ui("Failed to save transcript", e)

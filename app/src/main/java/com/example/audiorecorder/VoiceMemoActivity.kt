@@ -6,7 +6,6 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ComposeView
@@ -16,7 +15,9 @@ import com.example.audiorecorder.service.TranscriptionService
 import com.example.audiorecorder.service.VoiceRecordingService
 import com.example.audiorecorder.ui.TranscriptList
 import com.example.audiorecorder.ui.TranscriptViewModel
+import com.example.audiorecorder.utils.ClipboardUtils
 import com.example.audiorecorder.utils.Logger
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -40,6 +41,7 @@ class VoiceMemoActivity : AppCompatActivity() {
 
         setupToolbar()
         setupTranscriptList()
+        setupRecordButton()
         
         // Observe transcripts state flow
         lifecycleScope.launch {
@@ -47,11 +49,6 @@ class VoiceMemoActivity : AppCompatActivity() {
                 Logger.ui("Transcripts state updated: ${transcripts.size} items")
                 if (transcripts.isNotEmpty()) {
                     Logger.ui("First transcript: ${transcripts[0].file.name}, has transcript: ${transcripts[0].transcript != null}")
-                    Toast.makeText(
-                        this@VoiceMemoActivity,
-                        "Loaded ${transcripts.size} recordings",
-                        Toast.LENGTH_SHORT
-                    ).show()
                 }
             }
         }
@@ -61,6 +58,8 @@ class VoiceMemoActivity : AppCompatActivity() {
 
     private fun setupToolbar() {
         setSupportActionBar(binding.toolbar)
+        supportActionBar?.title = "Voice Memos"
+        
         binding.settingsButton.setOnClickListener {
             Logger.ui("Settings button clicked")
             val settingsFragment = supportFragmentManager.findFragmentById(R.id.mainContent)
@@ -78,13 +77,26 @@ class VoiceMemoActivity : AppCompatActivity() {
             }
         }
     }
+    
+    private fun setupRecordButton() {
+        val recordButton = binding.recordButton
+        
+        recordButton.setOnClickListener {
+            if (isRecording) {
+                Logger.ui("Record button clicked: stopping recording")
+                recordButton.setImageResource(R.drawable.ic_mic)
+                stopRecordingAndTranscribe()
+            } else {
+                Logger.ui("Record button clicked: starting recording")
+                recordButton.setImageResource(R.drawable.ic_stop)
+                startRecording()
+            }
+        }
+    }
 
     private fun showTranscriptList() {
         Logger.ui("Showing transcript list")
         binding.transcriptsContainer.visibility = View.VISIBLE
-        
-        // Show loading toast
-        Toast.makeText(this, "Loading recordings...", Toast.LENGTH_SHORT).show()
         
         // Refresh the list when showing it
         viewModel.refreshTranscripts()
@@ -99,10 +111,21 @@ class VoiceMemoActivity : AppCompatActivity() {
                     currentRecordingFile = file
                     isRecording = true
                     Logger.ui("Recording started successfully")
+                    
+                    // Update UI to show recording state
+                    runOnUiThread {
+                        binding.recordButton.setImageResource(R.drawable.ic_stop)
+                        Toast.makeText(this@VoiceMemoActivity, "Recording started", Toast.LENGTH_SHORT).show()
+                    }
                 }
                 .onFailure { error ->
                     Logger.ui("Failed to start recording", error)
                     Toast.makeText(this@VoiceMemoActivity, "Failed to start recording", Toast.LENGTH_SHORT).show()
+                    
+                    // Reset UI
+                    runOnUiThread {
+                        binding.recordButton.setImageResource(R.drawable.ic_mic)
+                    }
                 }
         }
     }
@@ -116,10 +139,21 @@ class VoiceMemoActivity : AppCompatActivity() {
                     isRecording = false
                     Logger.ui("Recording stopped successfully, starting transcription")
                     
+                    // Update UI to show stopped state
+                    runOnUiThread {
+                        binding.recordButton.setImageResource(R.drawable.ic_mic)
+                    }
+                    
                     // Show the transcript list and add a placeholder
                     runOnUiThread {
                         showTranscriptList()
                         viewModel.addTranscript(file, "Transcribing...") // Add placeholder
+                    }
+                    
+                    // Only show "Transcribing..." toast for longer recordings (> 30 seconds)
+                    val recordingDuration = (System.currentTimeMillis() - file.lastModified()) / 1000
+                    if (recordingDuration > 30) {
+                        Toast.makeText(this@VoiceMemoActivity, "Transcribing...", Toast.LENGTH_SHORT).show()
                     }
                     
                     transcriptionService.transcribeAudio(file)
@@ -157,19 +191,30 @@ class VoiceMemoActivity : AppCompatActivity() {
                         transcripts = transcripts,
                         onTranscriptClick = { transcript ->
                             Logger.ui("Transcript clicked: ${transcript.file.name}")
-                            // Show transcript details or play audio
-                            Toast.makeText(
-                                this@VoiceMemoActivity,
-                                "Selected: ${transcript.file.nameWithoutExtension}",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
+                            handleTranscriptClick(transcript)
+                        },
+                        viewModel = viewModel
                     )
                 }
             }
         }
         binding.transcriptsContainer.addView(transcriptListView)
         Logger.ui("Transcript list view added to container")
+    }
+    
+    private fun handleTranscriptClick(transcript: com.example.audiorecorder.ui.TranscriptItem) {
+        // For now, just copy the transcript to clipboard
+        transcript.transcript?.let { text ->
+            if (text != "Transcribing..." && text != "Transcription failed") {
+                ClipboardUtils.copyToClipboard(this, text, "Transcript", true)
+            } else {
+                Toast.makeText(this, "Transcript not available yet", Toast.LENGTH_SHORT).show()
+            }
+        } ?: run {
+            Toast.makeText(this, "No transcript available", Toast.LENGTH_SHORT).show()
+        }
+        
+        // TODO: In the future, implement play functionality
     }
 
     override fun onBackPressed() {
@@ -194,18 +239,15 @@ class VoiceMemoActivity : AppCompatActivity() {
         if (supportFragmentManager.backStackEntryCount == 0) {
             showTranscriptList()
         }
+    }
+    
+    override fun onPause() {
+        super.onPause()
         
-        // Check if we have any recordings
-        lifecycleScope.launch {
-            val count = viewModel.transcripts.value.size
-            Logger.ui("Current transcript count: $count")
-            if (count == 0) {
-                Toast.makeText(
-                    this@VoiceMemoActivity,
-                    "No recordings found. Try recording something!",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
+        // If recording is in progress, stop it
+        if (isRecording) {
+            Logger.ui("Activity paused while recording, stopping recording")
+            stopRecordingAndTranscribe()
         }
     }
 } 

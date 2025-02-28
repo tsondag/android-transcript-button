@@ -20,6 +20,7 @@
             android:layout_height="?attr/actionBarSize"
             android:background="@color/white"
             app:title="Voice Memos"
+            app:titleTextAppearance="@style/TextAppearance.AppCompat.Title"
             app:titleTextColor="@color/text_primary">
 
             <ImageButton
@@ -41,7 +42,6 @@
         android:id="@+id/mainContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <!-- Transcripts container -->
@@ -51,5 +51,17 @@
             android:layout_height="match_parent"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- FAB for recording -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/recordButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:contentDescription="Record"
+        app:srcCompat="@drawable/ic_mic"
+        app:backgroundTint="@color/colorPrimary"
+        app:tint="@color/white"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout> 
