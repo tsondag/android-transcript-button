@@ -6,9 +6,29 @@
     <color name="gray_medium">#E6EAF0</color>
     <color name="text_primary">#333333</color>
     <color name="text_secondary">#555555</color>
+    <color name="text_success">#4CAF50</color>
     <color name="text_tertiary">#888888</color>
     <color name="white">#FFFFFF</color>
-    <string name="app_name">Audio Recorder</string>
+    <string name="accessibility_service_description">Allows the app to automatically insert transcribed text into input fields. This is used for the Auto-Insert feature.</string>
+    <string name="app_name">Voice Recorder</string>
+    <string name="copy">Copy</string>
+    <string name="empty_state_message">No voice memos yet.\nStart recording!</string>
+    <string name="hide_floating_button">Hide floating button</string>
+    <string name="menu">Menu</string>
+    <string name="play">Play</string>
+    <string name="search_hint">Search voice notes</string>
+    <string name="settings">Settings</string>
+    <string name="show_floating_button">Show floating button</string>
+    <string name="title_voice_memos">Voice Memos</string>
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimary</item>
+        <item name="colorAccent">@color/colorPrimary</item>
+    </style>
+    <style name="SwitchCompatTheme">
+        <item name="colorControlActivated">@color/colorPrimary</item>
+        <item name="android:colorForeground">@color/gray_medium</item>
+    </style>
     <style name="Theme.AudioRecorder" parent="Theme.MaterialComponents.Light.NoActionBar">
         
         <item name="colorPrimary">@color/text_primary</item>

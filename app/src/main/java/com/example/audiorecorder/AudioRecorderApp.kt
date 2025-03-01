@@ -5,13 +5,19 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.example.audiorecorder.utils.Logger
+import com.example.audiorecorder.workers.AutoDeleteWorker
+import java.util.concurrent.TimeUnit
 
 class AudioRecorderApp : Application() {
     
     companion object {
         const val CHANNEL_ID = "AudioRecorderChannel"
         const val TRANSCRIPT_CHANNEL_ID = "TranscriptNotificationChannel"
+        private const val AUTO_DELETE_WORK_NAME = "auto_delete_work"
     }
 
     override fun onCreate() {
@@ -23,6 +29,9 @@ class AudioRecorderApp : Application() {
         
         // Create notification channels
         createNotificationChannels()
+        
+        // Schedule auto-delete worker
+        scheduleAutoDeleteWorker()
         
         Logger.ui("Application initialized successfully")
     }
@@ -59,5 +68,23 @@ class AudioRecorderApp : Application() {
         } else {
             Logger.ui("Notification channels not created (Android version < O)")
         }
+    }
+    
+    private fun scheduleAutoDeleteWorker() {
+        Logger.ui("Scheduling auto-delete worker")
+        
+        // Create a periodic work request that runs once a day
+        val autoDeleteWorkRequest = PeriodicWorkRequestBuilder<AutoDeleteWorker>(
+            1, TimeUnit.DAYS
+        ).build()
+        
+        // Schedule the work request
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            AUTO_DELETE_WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP, // Keep existing work if it exists
+            autoDeleteWorkRequest
+        )
+        
+        Logger.ui("Auto-delete worker scheduled successfully")
     }
 } 

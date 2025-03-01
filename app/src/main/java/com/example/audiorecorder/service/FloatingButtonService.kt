@@ -43,6 +43,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.preference.PreferenceManager
 
 /**
  * A service that displays a draggable floating action button over other apps.
@@ -111,7 +112,23 @@ class FloatingButtonService : Service() {
                 setupFloatingButton()
             }
             
-            startForeground(NOTIFICATION_ID, createNotification())
+            // Check if we should use notification (optional)
+            val useNotification = intent?.getBooleanExtra("use_notification", true) ?: true
+            
+            if (useNotification) {
+                startForeground(NOTIFICATION_ID, createNotification())
+                Log.d(TAG, "Started service with notification")
+            } else {
+                // For Android 12+ we still need a notification, but we can make it silent
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    val silentNotification = createSilentNotification()
+                    startForeground(NOTIFICATION_ID, silentNotification)
+                    Log.d(TAG, "Started service with silent notification (Android 12+)")
+                } else {
+                    // For older versions, we can run without a notification
+                    Log.d(TAG, "Started service without notification")
+                }
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error creating floating button", e)
             stopSelf()
@@ -353,7 +370,9 @@ class FloatingButtonService : Service() {
                             // Note: Notification removed as requested
                             
                             // Auto-copy to clipboard if enabled in settings
-                            if (SettingsFragment.isAutoCopyEnabled(this@FloatingButtonService)) {
+                            val prefs = PreferenceManager.getDefaultSharedPreferences(this@FloatingButtonService)
+                            val isAutoCopyEnabled = prefs.getBoolean(SettingsFragment.PREF_AUTO_COPY_ENABLED, false)
+                            if (isAutoCopyEnabled) {
                                 Logger.ui("Auto-copy enabled, copying transcript to clipboard")
                                 withContext(Dispatchers.Main) {
                                     ClipboardUtils.copyToClipboard(
@@ -366,7 +385,8 @@ class FloatingButtonService : Service() {
                             }
                             
                             // Auto-insert to current input field if enabled in settings
-                            if (SettingsFragment.isAutoInsertEnabled(this@FloatingButtonService)) {
+                            val isAutoInsertEnabled = prefs.getBoolean(SettingsFragment.PREF_AUTO_INSERT_ENABLED, false)
+                            if (isAutoInsertEnabled) {
                                 Logger.ui("Auto-insert enabled, inserting transcript into current input field")
                                 withContext(Dispatchers.Main) {
                                     val success = AccessibilityUtils.insertTextIntoCurrentField(response.text)
@@ -463,6 +483,24 @@ class FloatingButtonService : Service() {
             .setSmallIcon(android.R.drawable.ic_btn_speak_now)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+            .build()
+    }
+
+    private fun createSilentNotification(): Notification {
+        // Create a silent version of the notification for when notification permission is not granted
+        val notificationIntent = Intent(this, VoiceMemoActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, notificationIntent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("Voice Recorder")
+            .setContentText("Recording service is running")
+            .setSmallIcon(R.drawable.ic_mic)
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_MIN) // Minimum priority
+            .setSilent(true) // Make it silent
             .build()
     }
 

@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.audiorecorder.app-mergeDebugResources-63:/values-en-rGB/values-en-rGB.xml",
+            "outputFile": "com.example.audiorecorder.app-mergeDebugResources-69:/values-en-rGB/values-en-rGB.xml",
             "map": [
                 {
                     "source": "/Users/thijssondag/.gradle/caches/8.9/transforms/30f3565b3522aef844f3af48ac6f6e2f/transformed/material-1.11.0/res/values-en-rGB/values-en-rGB.xml",

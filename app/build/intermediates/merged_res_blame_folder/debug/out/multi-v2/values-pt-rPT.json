@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.audiorecorder.app-mergeDebugResources-63:/values-pt-rPT/values-pt-rPT.xml",
+            "outputFile": "com.example.audiorecorder.app-mergeDebugResources-69:/values-pt-rPT/values-pt-rPT.xml",
             "map": [
                 {
                     "source": "/Users/thijssondag/.gradle/caches/8.9/transforms/41d7327d7daac18cc52bd1310b7a6f1a/transformed/core-1.12.0/res/values-pt-rPT/values-pt-rPT.xml",

@@ -1391,7 +1391,11 @@ attr yearTodayStyle
 bool abc_action_bar_embed_tabs
 bool abc_config_actionMenuItemAllCaps
 bool config_materialPreferenceIconSpaceReserved
+bool enable_system_alarm_service_default
+bool enable_system_foreground_service_default
+bool enable_system_job_service_default
 bool mtrl_btn_textappearance_all_caps
+bool workmanager_test_configuration
 color abc_background_cache_hint_selector_material_dark
 color abc_background_cache_hint_selector_material_light
 color abc_btn_colored_borderless_text_material
@@ -2167,6 +2171,7 @@ color switch_thumb_normal_material_dark
 color switch_thumb_normal_material_light
 color text_primary
 color text_secondary
+color text_success
 color text_tertiary
 color tooltip_background_dark
 color tooltip_background_light
@@ -3081,9 +3086,12 @@ drawable ic_call_answer_video
 drawable ic_call_answer_video_low
 drawable ic_call_decline
 drawable ic_call_decline_low
+drawable ic_check
 drawable ic_clear_black_24
 drawable ic_clock_black_24dp
+drawable ic_close
 drawable ic_copy
+drawable ic_dropdown_arrow
 drawable ic_expand
 drawable ic_keyboard_black_24dp
 drawable ic_m3_chip_check
@@ -3091,6 +3099,7 @@ drawable ic_m3_chip_checked_circle
 drawable ic_m3_chip_close
 drawable ic_menu
 drawable ic_mic
+drawable ic_more_vert
 drawable ic_mtrl_checked_circle
 drawable ic_mtrl_chip_checked_black
 drawable ic_mtrl_chip_checked_circle
@@ -3098,6 +3107,7 @@ drawable ic_mtrl_chip_close_circle
 drawable ic_pause
 drawable ic_play
 drawable ic_record
+drawable ic_search
 drawable ic_search_black_24
 drawable ic_settings
 drawable ic_stop
@@ -3176,6 +3186,8 @@ drawable notification_tile_bg
 drawable notify_panel_notification_icon_bg
 drawable preference_list_divider_material
 drawable round_button_background
+drawable search_background
+drawable spinner_background
 drawable test_level_drawable
 drawable text_background
 drawable tooltip_frame_dark
@@ -3195,6 +3207,11 @@ id SYM
 id TOP_END
 id TOP_START
 id accelerate
+id accessibilityPermissionCard
+id accessibilityPermissionDescription
+id accessibilityPermissionStatus
+id accessibilityServiceStatus
+id accessibilitySettingsButton
 id accessibility_action_clickable_span
 id accessibility_custom_action_0
 id accessibility_custom_action_1
@@ -3266,10 +3283,17 @@ id arc
 id asConfigured
 id async
 id audioPermissionButton
+id audioPermissionStatus
 id auto
 id autoComplete
 id autoCompleteToEnd
 id autoCompleteToStart
+id autoCopySwitch
+id autoDeletePeriodDropdown
+id autoDeletePeriodInputLayout
+id autoDeleteSwitch
+id autoInsertSwitch
+id autoTranslateSwitch
 id barrier
 id baseline
 id beginOnFirstDraw
@@ -3299,6 +3323,7 @@ id checkbox
 id checked
 id chronometer
 id circle_center
+id clearSearchButton
 id clear_text
 id clip_horizontal
 id clip_vertical
@@ -3325,6 +3350,8 @@ id currentState
 id custom
 id customPanel
 id cut
+id dateTimeContainer
+id dateTimeText
 id date_picker_actions
 id decelerate
 id decelerateAndComplete
@@ -3354,6 +3381,7 @@ id dragRight
 id dragStart
 id dragUp
 id dropdown_menu
+id durationText
 id easeIn
 id easeInOut
 id easeOut
@@ -3363,6 +3391,7 @@ id edit_query
 id edit_text_id
 id elastic
 id embed
+id emptyState
 id emptyStateText
 id end
 id endToStart
@@ -3426,6 +3455,8 @@ id item_touch_helper_previous_elevation
 id jumpToEnd
 id jumpToStart
 id labeled
+id languageDropdown
+id languageInputLayout
 id layout
 id left
 id leftToRight
@@ -3464,10 +3495,8 @@ id material_timepicker_ok_button
 id material_timepicker_view
 id material_value_index
 id matrix
-id memoDuration
 id memoList
-id memoTime
-id memoTranscript
+id menuButton
 id message
 id middle
 id mini
@@ -3521,6 +3550,8 @@ id normal
 id north
 id notificationPermissionButton
 id notificationPermissionCard
+id notificationPermissionDescription
+id notificationPermissionStatus
 id notification_background
 id notification_main_column
 id notification_main_column_container
@@ -3544,6 +3575,7 @@ id open_search_view_toolbar_container
 id outline
 id outward
 id overlayPermissionButton
+id overlayPermissionStatus
 id overshoot
 id packed
 id parallax
@@ -3570,6 +3602,7 @@ id progress_horizontal
 id radio
 id ratio
 id rectangles
+id recyclerView
 id recycler_view
 id report_drawn
 id reverseSawtooth
@@ -3590,6 +3623,7 @@ id scrollIndicatorDown
 id scrollIndicatorUp
 id scrollView
 id scrollable
+id searchEditText
 id search_badge
 id search_bar
 id search_button
@@ -3605,7 +3639,9 @@ id seekbar_value
 id select_dialog_listview
 id selected
 id selection_type
+id separatorDot
 id settingsButton
+id settings_container
 id sharedValueSet
 id sharedValueUnset
 id shortcut
@@ -3690,7 +3726,6 @@ id transcriptCard
 id transcriptText
 id transcriptTime
 id transcription_text
-id transcriptsContainer
 id transitionToEnd
 id transitionToStart
 id transition_current_scene
@@ -3839,6 +3874,7 @@ layout abc_search_dropdown_item_icons_2line
 layout abc_search_view
 layout abc_select_dialog_material
 layout abc_tooltip
+layout activity_settings
 layout activity_voice_memo
 layout activity_voice_memos
 layout custom_dialog
@@ -3863,6 +3899,8 @@ layout fragment_settings
 layout image_frame
 layout ime_base_split_test_activity
 layout ime_secondary_split_test_activity
+layout item_spinner
+layout item_spinner_dropdown
 layout item_voice_memo
 layout m3_alert_dialog
 layout m3_alert_dialog_actions
@@ -3971,6 +4009,7 @@ string abc_searchview_description_voice
 string abc_shareactionprovider_share_with
 string abc_shareactionprovider_share_with_application
 string abc_toolbar_collapse_description
+string accessibility_service_description
 string androidx_startup
 string app_name
 string appbar_scrolling_view_behavior
@@ -4034,6 +4073,7 @@ string default_error_message
 string default_popup_window_title
 string dialog
 string dropdown_menu
+string empty_state_message
 string error_a11y_label
 string error_icon_content_description
 string expand_button_title
@@ -4042,6 +4082,7 @@ string exposed_dropdown_menu_content_description
 string fab_transformation_scrim_behavior
 string fab_transformation_sheet_behavior
 string hide_bottom_view_on_scroll_behavior
+string hide_floating_button
 string icon_content_description
 string in_progress
 string indeterminate
@@ -4085,6 +4126,7 @@ string material_timepicker_minute
 string material_timepicker_pm
 string material_timepicker_select_time
 string material_timepicker_text_input_mode_description
+string menu
 string mtrl_badge_numberless_content_description
 string mtrl_checkbox_button_icon_path_checked
 string mtrl_checkbox_button_icon_path_group_name
@@ -4157,15 +4199,19 @@ string path_password_eye
 string path_password_eye_mask_strike_through
 string path_password_eye_mask_visible
 string path_password_strike_through
+string play
 string preference_copied
 string range_end
 string range_start
 string search_bar_search
+string search_hint
 string search_menu_title
 string searchbar_scrolling_view_behavior
 string searchview_clear_text_content_description
 string searchview_navigation_content_description
 string selected
+string settings
+string show_floating_button
 string side_sheet_accessibility_pane_title
 string side_sheet_behavior
 string snackbar_dismiss
@@ -4187,6 +4233,7 @@ string time_picker_minute_suffix
 string time_picker_minute_text_field
 string time_picker_period_toggle_description
 string time_picker_pm
+string title_voice_memos
 string tooltip_long_press_label
 string tooltip_pane_description
 string v7_preference_off
@@ -4202,6 +4249,7 @@ style Animation_Material3_SideSheetDialog
 style Animation_Material3_SideSheetDialog_Left
 style Animation_Material3_SideSheetDialog_Right
 style Animation_MaterialComponents_BottomSheetDialog
+style AppTheme
 style Base_AlertDialog_AppCompat
 style Base_AlertDialog_AppCompat_Light
 style Base_Animation_AppCompat_Dialog
@@ -4629,6 +4677,7 @@ style ShapeAppearanceOverlay_MaterialComponents_MaterialCalendar_Day
 style ShapeAppearanceOverlay_MaterialComponents_MaterialCalendar_Window_Fullscreen
 style ShapeAppearanceOverlay_MaterialComponents_MaterialCalendar_Year
 style ShapeAppearanceOverlay_MaterialComponents_TextInputLayout_FilledBox
+style SwitchCompatTheme
 style TextAppearance_AppCompat
 style TextAppearance_AppCompat_Body1
 style TextAppearance_AppCompat_Body2
@@ -5516,3 +5565,4 @@ styleable ViewPager2 android_orientation
 styleable ViewStubCompat android_id android_layout android_inflatedId
 styleable ViewTransition android_id SharedValue SharedValueId clearsTag duration ifTagNotSet ifTagSet motionInterpolator motionTarget onStateTransition pathMotionArc setsTag transitionDisable upDuration viewTransitionMode
 styleable include constraintSet
+xml accessibility_service_config

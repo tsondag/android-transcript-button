@@ -633,7 +633,11 @@
     <bool name="abc_action_bar_embed_tabs">true</bool>
     <bool name="abc_config_actionMenuItemAllCaps">true</bool>
     <bool name="config_materialPreferenceIconSpaceReserved">false</bool>
+    <bool name="enable_system_alarm_service_default">true</bool>
+    <bool name="enable_system_foreground_service_default">true</bool>
+    <bool name="enable_system_job_service_default">false</bool>
     <bool name="mtrl_btn_textappearance_all_caps">true</bool>
+    <bool name="workmanager_test_configuration">false</bool>
     <color name="abc_decor_view_status_guard">#ff000000</color>
     <color name="abc_decor_view_status_guard_light">#ffffffff</color>
     <color name="abc_search_url_text_normal">#7fa87f</color>
@@ -970,6 +974,7 @@
     <color name="switch_thumb_normal_material_light">#fff1f1f1</color>
     <color name="text_primary">#333333</color>
     <color name="text_secondary">#555555</color>
+    <color name="text_success">#4CAF50</color>
     <color name="text_tertiary">#888888</color>
     <color name="tooltip_background_dark">#e6616161</color>
     <color name="tooltip_background_light">#e6FFFFFF</color>
@@ -2002,8 +2007,9 @@
     <string name="abc_shareactionprovider_share_with">Share with</string>
     <string name="abc_shareactionprovider_share_with_application">Share with <ns2:g example="Mail" id="application_name">%s</ns2:g></string>
     <string name="abc_toolbar_collapse_description">Collapse</string>
+    <string name="accessibility_service_description">Allows the app to automatically insert transcribed text into input fields. This is used for the Auto-Insert feature.</string>
     <string name="androidx_startup" translatable="false">androidx.startup</string>
-    <string name="app_name">Audio Recorder</string>
+    <string name="app_name">Voice Recorder</string>
     <string name="appbar_scrolling_view_behavior" translatable="false">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
     <string name="bottom_sheet_behavior" translatable="false">com.google.android.material.bottomsheet.BottomSheetBehavior</string>
     <string name="bottom_sheet_collapse_description">Collapse bottom sheet</string>
@@ -2069,6 +2075,7 @@
     <string name="default_popup_window_title" ns1:ignore="ExtraTranslation">"Pop-Up Window"</string>
     <string name="dialog">"Dialog"</string>
     <string name="dropdown_menu">"Dropdown menu"</string>
+    <string name="empty_state_message">No voice memos yet.\nStart recording!</string>
     <string description="Screen reader announcement for when a checkbox is on error. [CHAR LIMIT=NONE]" name="error_a11y_label">
     Error: invalid
   </string>
@@ -2079,6 +2086,7 @@
     <string name="fab_transformation_scrim_behavior" translatable="false">com.google.android.material.transformation.FabTransformationScrimBehavior</string>
     <string name="fab_transformation_sheet_behavior" translatable="false">com.google.android.material.transformation.FabTransformationSheetBehavior</string>
     <string name="hide_bottom_view_on_scroll_behavior" translatable="false">com.google.android.material.behavior.HideBottomViewOnScrollBehavior</string>
+    <string name="hide_floating_button">Hide floating button</string>
     <string description="Content description for an icon that appears in the title area of a dialog" name="icon_content_description">Dialog Icon</string>
     <string name="in_progress">In progress</string>
     <string name="indeterminate">Partially checked</string>
@@ -2122,6 +2130,7 @@
     <string description="Suffix for time in 12-hour standard, after noon. [CHAR_LIMIT=2]" name="material_timepicker_pm">PM</string>
     <string description="Title for the dialog with a time picker. [CHAR_LIMIT=32]" name="material_timepicker_select_time">Select time</string>
     <string name="material_timepicker_text_input_mode_description">Switch to text input mode for the time input.</string>
+    <string name="menu">Menu</string>
     <string description="Content description for new notification (no number count) [CHAR_LIMIT=NONE]" name="mtrl_badge_numberless_content_description">New notification</string>
     <string name="mtrl_checkbox_button_icon_path_checked" translatable="false">M14,18.2 11.4,15.6 10,17 14,21 22,13 20.6,11.6z</string>
     <string name="mtrl_checkbox_button_icon_path_group_name" translatable="false">icon</string>
@@ -2200,12 +2209,14 @@
     <string name="path_password_eye_mask_strike_through" translatable="false">M2,4.27 L19.73,22 L22.27,19.46 L4.54,1.73 L4.54,1 L23,1 L23,23 L1,23 L1,4.27 Z</string>
     <string name="path_password_eye_mask_visible" translatable="false">M2,4.27 L2,4.27 L4.54,1.73 L4.54,1.73 L4.54,1 L23,1 L23,23 L1,23 L1,4.27 Z</string>
     <string name="path_password_strike_through" translatable="false">M3.27,4.27 L19.74,20.74</string>
+    <string name="play">Play</string>
     <string name="preference_copied">
         \"<ns2:g example="Version 1.1" id="summary">%1$s</ns2:g>\" copied to clipboard.
     </string>
     <string name="range_end">"Range end"</string>
     <string name="range_start">"Range start"</string>
     <string name="search_bar_search">Search</string>
+    <string name="search_hint">Search voice notes</string>
     <string name="search_menu_title">Search</string>
     <string name="searchbar_scrolling_view_behavior" translatable="false">
     com.google.android.material.search.SearchBar$ScrollingViewBehavior
@@ -2213,6 +2224,8 @@
     <string description="Content description for the X button to clear text [CHAR_LIMIT=NONE]" name="searchview_clear_text_content_description">Clear text</string>
     <string description="Content description for the navigation button to return to the previous screen [CHAR_LIMIT=NONE]" name="searchview_navigation_content_description">Back</string>
     <string name="selected">Selected</string>
+    <string name="settings">Settings</string>
+    <string name="show_floating_button">Show floating button</string>
     <string description="Title of the side sheet&apos;s accessibility pane that is spoken by TalkBack when the side sheet appears on screen. [CHAR_LIMIT=NONE]" name="side_sheet_accessibility_pane_title">Side Sheet</string>
     <string name="side_sheet_behavior" translatable="false">com.google.android.material.sidesheet.SideSheetBehavior</string>
     <string name="snackbar_dismiss">Dismiss</string>
@@ -2234,6 +2247,7 @@
     <string name="time_picker_minute_text_field">for minutes</string>
     <string name="time_picker_period_toggle_description">Select AM or PM</string>
     <string name="time_picker_pm">PM</string>
+    <string name="title_voice_memos">Voice Memos</string>
     <string name="tooltip_long_press_label">Show tooltip</string>
     <string name="tooltip_pane_description">Tooltip</string>
     <string name="v7_preference_off">OFF</string>
@@ -2264,6 +2278,11 @@
     <item name="android:windowEnterAnimation">@anim/mtrl_bottom_sheet_slide_in</item>
     <item name="android:windowExitAnimation">@anim/mtrl_bottom_sheet_slide_out</item>
   </style>
+    <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimary</item>
+        <item name="colorAccent">@color/colorPrimary</item>
+    </style>
     <style name="Base.AlertDialog.AppCompat" parent="android:Widget">
         <item name="android:layout">@layout/abc_alert_dialog_material</item>
         <item name="listLayout">@layout/abc_select_dialog_material</item>
@@ -6278,6 +6297,10 @@
     <item name="cornerSizeBottomLeft">@dimen/mtrl_textinput_box_corner_radius_small</item>
     <item name="cornerSizeBottomRight">@dimen/mtrl_textinput_box_corner_radius_small</item>
   </style>
+    <style name="SwitchCompatTheme">
+        <item name="colorControlActivated">@color/colorPrimary</item>
+        <item name="android:colorForeground">@color/gray_medium</item>
+    </style>
     <style name="TextAppearance.AppCompat" parent="Base.TextAppearance.AppCompat"/>
     <style name="TextAppearance.AppCompat.Body1" parent="Base.TextAppearance.AppCompat.Body1"/>
     <style name="TextAppearance.AppCompat.Body2" parent="Base.TextAppearance.AppCompat.Body2"/>

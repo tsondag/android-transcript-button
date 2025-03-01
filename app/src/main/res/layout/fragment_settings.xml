@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white">
@@ -9,7 +10,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="24dp">
 
         <!-- Permissions Section -->
         <TextView
@@ -19,131 +21,292 @@
             android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="In order for the app to record your audio and transcribe it, we need access to certain device functionalities."
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
             android:layout_marginBottom="16dp"/>
 
         <!-- Audio Recording Permission -->
-        <com.google.android.material.card.MaterialCardView
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="8dp">
+            android:paddingVertical="12dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/audioPermissionStatus">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Audio Recording"
                     android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"/>
+                    android:textSize="16sp"/>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:text="Required for recording voice memos"
-                    android:textColor="@color/text_secondary"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/audioPermissionButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Grant Permission"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
-
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"/>
             </LinearLayout>
 
-        </com.google.android.material.card.MaterialCardView>
+            <TextView
+                android:id="@+id/audioPermissionStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Granted"
+                android:textColor="@color/text_success"
+                android:textSize="16sp"
+                android:drawableStart="@drawable/ic_check"
+                android:drawablePadding="4dp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/audioPermissionButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Grant Access"
+                android:textAllCaps="false"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:backgroundTint="#000000"
+                android:textColor="#FFFFFF"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#EEEEEE"/>
 
         <!-- Overlay Permission -->
-        <com.google.android.material.card.MaterialCardView
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="8dp">
+            android:paddingVertical="12dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/overlayPermissionStatus">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Overlay Permission"
                     android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"/>
+                    android:textSize="16sp"/>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:text="Required for floating recording button"
-                    android:textColor="@color/text_secondary"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/overlayPermissionButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Grant Permission"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
-
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"/>
             </LinearLayout>
 
-        </com.google.android.material.card.MaterialCardView>
+            <TextView
+                android:id="@+id/overlayPermissionStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Granted"
+                android:textColor="@color/text_success"
+                android:textSize="16sp"
+                android:drawableStart="@drawable/ic_check"
+                android:drawablePadding="4dp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
 
-        <!-- Notification Permission (Android 13+) -->
-        <com.google.android.material.card.MaterialCardView
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/overlayPermissionButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Grant Access"
+                android:textAllCaps="false"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:backgroundTint="#000000"
+                android:textColor="#FFFFFF"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#EEEEEE"/>
+
+        <!-- Notification Permission -->
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/notificationPermissionCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="8dp">
+            android:paddingVertical="12dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/notificationPermissionStatus">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Notification Permission"
+                    android:text="Notifications"
                     android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"/>
+                    android:textSize="16sp"/>
 
                 <TextView
+                    android:id="@+id/notificationPermissionDescription"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:text="Required for recording service notification"
-                    android:textColor="@color/text_secondary"/>
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"/>
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/notificationPermissionButton"
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Grant Permission"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
-
+                    android:text="(Optional)"
+                    android:textColor="@color/text_tertiary"
+                    android:textSize="12sp"
+                    android:textStyle="italic"/>
             </LinearLayout>
 
-        </com.google.android.material.card.MaterialCardView>
+            <TextView
+                android:id="@+id/notificationPermissionStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Granted"
+                android:textColor="@color/text_success"
+                android:textSize="16sp"
+                android:drawableStart="@drawable/ic_check"
+                android:drawablePadding="4dp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/notificationPermissionButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Grant Access"
+                android:textAllCaps="false"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:backgroundTint="#000000"
+                android:textColor="#FFFFFF"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#EEEEEE"/>
+
+        <!-- Accessibility Settings -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/accessibilityPermissionCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingVertical="12dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/accessibilityPermissionStatus">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Accessibility Settings"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"/>
+
+                <TextView
+                    android:id="@+id/accessibilityPermissionDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Required to automatically copy transcript"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="(Optional)"
+                    android:textColor="@color/text_tertiary"
+                    android:textSize="12sp"
+                    android:textStyle="italic"/>
+
+                <TextView
+                    android:id="@+id/accessibilityServiceStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Accessibility service required"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="italic"
+                    android:layout_marginTop="4dp"/>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/accessibilityPermissionStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Granted"
+                android:textColor="@color/text_success"
+                android:textSize="16sp"
+                android:drawableStart="@drawable/ic_check"
+                android:drawablePadding="4dp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/accessibilitySettingsButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Grant Access"
+                android:textAllCaps="false"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:backgroundTint="#000000"
+                android:textColor="#FFFFFF"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- Features Section -->
         <TextView
@@ -153,196 +316,294 @@
             android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Decide how you want the app to behave"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp"
             android:layout_marginBottom="16dp"/>
 
         <!-- Floating Button Control -->
-        <com.google.android.material.card.MaterialCardView
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="8dp">
+            android:paddingVertical="12dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/toggleFloatingButton">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Floating Button"
                     android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"/>
+                    android:textSize="16sp"/>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:text="Show/hide the floating recording button"
-                    android:textColor="@color/text_secondary"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/toggleFloatingButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Show Button"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
-
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"/>
             </LinearLayout>
 
-        </com.google.android.material.card.MaterialCardView>
-        
-        <!-- Auto-Copy Transcripts -->
-        <com.google.android.material.card.MaterialCardView
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/toggleFloatingButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Show Button"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#EEEEEE"/>
+
+        <!-- Auto Copy Transcript -->
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="8dp">
+            android:paddingVertical="12dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/autoCopySwitch">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Auto-Copy Transcripts"
+                    android:text="Auto Copy Transcript"
                     android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"/>
+                    android:textSize="16sp"/>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
                     android:text="Automatically copy transcripts to clipboard when completed"
-                    android:textColor="@color/text_secondary"/>
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/autoCopySwitch"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Auto-copy to clipboard"
-                    android:textColor="@color/text_primary"/>
-
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"/>
             </LinearLayout>
 
-        </com.google.android.material.card.MaterialCardView>
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/autoCopySwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:theme="@style/SwitchCompatTheme"/>
 
-        <!-- Auto-Insert to Current Input Field -->
-        <com.google.android.material.card.MaterialCardView
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#EEEEEE"/>
+
+        <!-- Auto Insert to Input Field -->
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="8dp">
+            android:paddingVertical="12dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/autoInsertSwitch">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Auto-Insert to Input Field"
+                    android:text="Auto Insert to Input Field"
                     android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"/>
+                    android:textSize="16sp"/>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Automatically insert transcripts into the current input field"
-                    android:textColor="@color/text_secondary"/>
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/autoInsertSwitch"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Auto-insert to current input field"
-                    android:textColor="@color/text_primary"/>
-
-                <TextView
-                    android:id="@+id/accessibilityServiceStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Accessibility service required"
+                    android:text="Automatically insert transcript into the current input field"
                     android:textColor="@color/text_secondary"
-                    android:textStyle="italic"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/accessibilitySettingsButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Enable Accessibility Service"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
-
+                    android:textSize="14sp"/>
             </LinearLayout>
 
-        </com.google.android.material.card.MaterialCardView>
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/autoInsertSwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:theme="@style/SwitchCompatTheme"/>
 
-        <!-- Language Settings -->
-        <com.google.android.material.card.MaterialCardView
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#EEEEEE"/>
+
+        <!-- Auto Translate -->
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:cardElevation="2dp"
-            app:cardCornerRadius="8dp">
+            android:paddingVertical="12dp">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/autoTranslateSwitch">
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Language Settings"
+                    android:text="Auto Translate"
                     android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold"/>
+                    android:textSize="16sp"/>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Control how language is handled during transcription"
-                    android:textColor="@color/text_secondary"/>
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/autoDetectLanguageSwitch"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Auto-detect language (no translation)"
-                    android:textColor="@color/text_primary"/>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="When enabled, the app will automatically detect the spoken language and transcribe in that language without translation."
+                    android:text="Automatically translate audio to selected language"
                     android:textColor="@color/text_secondary"
-                    android:textStyle="italic"/>
-
+                    android:textSize="14sp"/>
             </LinearLayout>
 
-        </com.google.android.material.card.MaterialCardView>
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/autoTranslateSwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:theme="@style/SwitchCompatTheme"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Language Dropdown (Replacing Spinner) -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/languageInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="8dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
+            android:hint="Target Language"
+            app:boxCornerRadiusBottomEnd="8dp"
+            app:boxCornerRadiusBottomStart="8dp"
+            app:boxCornerRadiusTopEnd="8dp"
+            app:boxCornerRadiusTopStart="8dp"
+            app:boxStrokeWidth="1dp"
+            app:boxStrokeColor="#E0E0E0">
+
+            <AutoCompleteTextView
+                android:id="@+id/languageDropdown"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:padding="8dp"
+                android:textSize="14sp"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#EEEEEE"/>
+
+        <!-- Auto Delete Notes -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingVertical="12dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/autoDeleteSwitch">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Auto Delete Notes"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"/>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Automatically delete notes after selected duration"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"/>
+            </LinearLayout>
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/autoDeleteSwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:theme="@style/SwitchCompatTheme"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Auto Delete Period Dropdown (Replacing Spinner) -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/autoDeletePeriodInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="8dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
+            android:hint="Delete After"
+            app:boxCornerRadiusBottomEnd="8dp"
+            app:boxCornerRadiusBottomStart="8dp"
+            app:boxCornerRadiusTopEnd="8dp"
+            app:boxCornerRadiusTopStart="8dp"
+            app:boxStrokeWidth="1dp"
+            app:boxStrokeColor="#E0E0E0">
+
+            <AutoCompleteTextView
+                android:id="@+id/autoDeletePeriodDropdown"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none"
+                android:padding="8dp"
+                android:textSize="14sp"/>
+
+        </com.google.android.material.textfield.TextInputLayout>
 
     </LinearLayout>
 

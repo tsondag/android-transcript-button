@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.audiorecorder.app-mergeDebugResources-63:/values-et/values-et.xml",
+            "outputFile": "com.example.audiorecorder.app-mergeDebugResources-69:/values-et/values-et.xml",
             "map": [
                 {
                     "source": "/Users/thijssondag/.gradle/caches/8.9/transforms/fde3a12530fb21dbc4cabf55393963b1/transformed/jetified-ui-release/res/values-et/values-et.xml",
