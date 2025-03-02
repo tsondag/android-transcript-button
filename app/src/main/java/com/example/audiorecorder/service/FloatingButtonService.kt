@@ -27,7 +27,7 @@ import com.example.audiorecorder.MainActivity
 import com.example.audiorecorder.R
 import com.example.audiorecorder.SettingsFragment
 import com.example.audiorecorder.VoiceMemoActivity
-import com.example.audiorecorder.floaty.CustomFloaty
+import com.example.audiorecorder.floaty.EnhancedFloatingButton
 import com.example.audiorecorder.receivers.CopyTranscriptReceiver
 import com.example.audiorecorder.repository.TranscriptionRepository
 import com.example.audiorecorder.utils.ClipboardUtils
@@ -44,6 +44,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.preference.PreferenceManager
+import android.os.Handler
+import android.os.Looper
+import android.view.View
 
 /**
  * A service that displays a draggable floating action button over other apps.
@@ -58,8 +61,13 @@ class FloatingButtonService : Service() {
     private var currentRecordingFile: File? = null
     private var mediaRecorder: MediaRecorder? = null
     
-    // Custom floating button
-    private var floatingButton: CustomFloaty? = null
+    // Enhanced floating button
+    private var floatingButton: EnhancedFloatingButton? = null
+    
+    // UI state tracking
+    private var isButtonActive = false
+    private var isKeyboardVisible = false
+    private var isAppMinimized = false
     
     // Coroutine scope for background operations
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -68,6 +76,10 @@ class FloatingButtonService : Service() {
     // Class-level variable to track if we've shown the transcribing toast
     private var hasShownTranscribingToast = false
     private var recordingStartTime = 0L
+
+    // Timer update handler
+    private val handler = Handler(Looper.getMainLooper())
+    private var timerRunnable: Runnable? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -98,6 +110,60 @@ class FloatingButtonService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "FloatingButtonService onStartCommand")
         
+        // Handle keyboard/input field state updates
+        if (intent?.getBooleanExtra("KEYBOARD_INPUT_STATE_CHANGED", false) == true) {
+            try {
+                val shouldShow = intent.getBooleanExtra("SHOW_FLOATING_BUTTON", false)
+                val isAppMinimized = intent.getBooleanExtra("IS_APP_MINIMIZED", false)
+                Log.d(TAG, "Received keyboard/input field state update: shouldShow=$shouldShow, isRecording=$isRecording, isAppMinimized=$isAppMinimized")
+                
+                // Determine if we should show the button based on state and preferences
+                var shouldActuallyShow = shouldShow
+                
+                // Apply smart button behavior if enabled (always show when recording)
+                if (SettingsFragment.isSmartButtonBehaviorEnabled(this)) {
+                    // Key logic: Button should show if (keyboard is active AND app is not minimized) OR we are recording
+                    shouldActuallyShow = (shouldShow && !isAppMinimized) || isRecording
+                    Log.d(TAG, "Smart button behavior enabled, adjusted shouldActuallyShow to: $shouldActuallyShow")
+                }
+                
+                // Since keyboard-only mode is now always enabled and integrated into Smart Button Behavior
+                Log.d(TAG, "Smart button mode active: $isButtonActive, should show: $shouldActuallyShow")
+                
+                // Force immediate hiding on minimization for better responsiveness
+                val forceImmediateHide = isAppMinimized && 
+                                       SettingsFragment.isSmartButtonBehaviorEnabled(this) && 
+                                       !isRecording
+                
+                if (shouldActuallyShow) {
+                    if (!isButtonActive) {
+                        // Setup the button - this will restore its last position from SharedPreferences
+                        setupFloatingButton()
+                        // Button is shown during setup
+                        Log.d(TAG, "Showing floating button")
+                    }
+                } else {
+                    if (isButtonActive) {
+                        // Handle immediate removal
+                        if (forceImmediateHide) {
+                            removeFloatingButton()
+                            Log.d(TAG, "Immediately removing floating button due to minimization")
+                        } else {
+                            // Just remove the button
+                            removeFloatingButton()
+                            Log.d(TAG, "Hiding floating button")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // Catch and log any exceptions to prevent service crashes
+                Log.e(TAG, "Error handling keyboard visibility change", e)
+            }
+            
+            return START_STICKY
+        }
+        
+        // Regular service start handling continues
         if (!checkOverlayPermission()) {
             Log.e(TAG, "Overlay permission not granted")
             stopSelf()
@@ -140,15 +206,11 @@ class FloatingButtonService : Service() {
 
     private fun setupFloatingButton() {
         try {
-            Log.d(TAG, "Creating floating button")
+            Log.d(TAG, "Creating enhanced floating button")
             
             // Create and show the floating button
-            floatingButton = CustomFloaty(
+            floatingButton = EnhancedFloatingButton(
                 context = this,
-                buttonIconResId = if (isRecording) R.drawable.ic_stop else R.drawable.ic_mic,
-                buttonBackgroundColor = if (isRecording) android.graphics.Color.RED else 0xFF6200EE.toInt(),
-                buttonIconTint = android.graphics.Color.WHITE,
-                buttonSize = 72,
                 onButtonClick = {
                     toggleRecording()
                 }
@@ -157,9 +219,9 @@ class FloatingButtonService : Service() {
             floatingButton?.show()
             isButtonActive = true
             
-            Log.d(TAG, "Floating button successfully added to window manager")
+            Log.d(TAG, "Enhanced floating button successfully added to window manager")
         } catch (e: Exception) {
-            Log.e(TAG, "Error creating floating button", e)
+            Log.e(TAG, "Error creating enhanced floating button", e)
             isButtonActive = false
             stopSelf()
         }
@@ -186,17 +248,17 @@ class FloatingButtonService : Service() {
         }
         isRecording = !isRecording
         
-        // Update UI
+        // Update UI based on recording state
         updateFloatingButton()
     }
 
     private fun updateFloatingButton() {
-        // Update the floating button icon and color based on recording state
-        floatingButton?.updateIcon(if (isRecording) R.drawable.ic_stop else R.drawable.ic_mic)
-        floatingButton?.updateBackgroundColor(if (isRecording) android.graphics.Color.RED else 0xFF6200EE.toInt())
-        
-        // Show transcription text if available
-        if (isTranscribing) {
+        // Update the floating button state based on recording state
+        if (isRecording) {
+            floatingButton?.updateState(EnhancedFloatingButton.RecordingState.RECORDING)
+        } else if (isTranscribing) {
+            // Don't update button state here, let the transcription completion handle it
+            
             // Only show "Transcribing..." toast for recordings longer than 30 seconds
             // and only show it once per transcription
             val recordingDurationSeconds = (System.currentTimeMillis() - recordingStartTime) / 1000
@@ -204,45 +266,36 @@ class FloatingButtonService : Service() {
                 Toast.makeText(this, "Transcribing...", Toast.LENGTH_SHORT).show()
                 hasShownTranscribingToast = true
             }
-        } else if (transcriptionText != null && !isRecording) {
-            Toast.makeText(this, transcriptionText, Toast.LENGTH_LONG).show()
+        } else if (transcriptionText != null) {
+            // Show "Saving" state when transcription is done
+            floatingButton?.updateState(EnhancedFloatingButton.RecordingState.STOPPING)
+        } else {
+            // Return to idle state
+            floatingButton?.updateState(EnhancedFloatingButton.RecordingState.IDLE)
         }
     }
 
     private fun startRecording() {
-        if (!checkAudioPermission()) {
-            Log.e(TAG, "Cannot start recording - no permission")
-            return
-        }
-
-        // Reset the toast flag when starting a new recording
-        hasShownTranscribingToast = false
-        // Record the start time
-        recordingStartTime = System.currentTimeMillis()
-
-        // Verify microphone access by creating a temporary AudioRecord instance
-        // This ensures the AppOps for RECORD_AUDIO is properly registered
-        verifyMicrophoneAccess()
-
-        // Clear any previous transcription text
-        transcriptionText = null
-
-        // Use the same timestamp format as before
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val fileName = "voice_memo_$timestamp.m4a"
-        // Save to the app's external files directory
-        currentRecordingFile = File(getExternalFilesDir(null), fileName)
-        Log.d(TAG, "Starting recording to file: ${currentRecordingFile?.absolutePath}")
-
         try {
+            Log.d(TAG, "Starting recording...")
+
+            // Reset state for new recording
+            transcriptionText = null
+            hasShownTranscribingToast = false
+            currentRecordingFile = createAudioFile()
+            recordingStartTime = System.currentTimeMillis()
+            
+            // Set up timer update
+            setupTimerUpdates()
+
             mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                Log.d(TAG, "Using Android 12+ MediaRecorder constructor")
                 MediaRecorder(this)
             } else {
                 @Suppress("DEPRECATION")
-                Log.d(TAG, "Using legacy MediaRecorder constructor")
                 MediaRecorder()
-            }.apply {
+            }
+
+            mediaRecorder?.apply {
                 Log.d(TAG, "Configuring MediaRecorder...")
                 setAudioSource(MediaRecorder.AudioSource.MIC)
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
@@ -258,81 +311,90 @@ class FloatingButtonService : Service() {
             Log.d(TAG, "Recording started successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Error starting recording: ${e.message}", e)
+            isRecording = false
             mediaRecorder?.release()
             mediaRecorder = null
-            currentRecordingFile = null
-        }
-    }
-
-    /**
-     * Verify microphone access by creating a temporary AudioRecord instance.
-     * This ensures the AppOps for RECORD_AUDIO is properly registered.
-     */
-    private fun verifyMicrophoneAccess() {
-        val minBufferSize = AudioRecord.getMinBufferSize(
-            44100,
-            AudioFormat.CHANNEL_IN_MONO,
-            AudioFormat.ENCODING_PCM_16BIT
-        )
-        
-        if (minBufferSize == AudioRecord.ERROR || minBufferSize == AudioRecord.ERROR_BAD_VALUE) {
-            Log.e(TAG, "Unable to determine minimum buffer size for AudioRecord")
-            return
-        }
-        
-        var audioRecord: AudioRecord? = null
-        try {
-            audioRecord = AudioRecord(
-                MediaRecorder.AudioSource.MIC,
-                44100,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                minBufferSize
-            )
             
-            if (audioRecord.state == AudioRecord.STATE_INITIALIZED) {
-                Log.d(TAG, "AudioRecord initialized successfully - microphone access verified")
-                audioRecord.startRecording()
-                // Just record a tiny bit to ensure the app op is registered
-                val buffer = ByteArray(minBufferSize)
-                audioRecord.read(buffer, 0, minBufferSize)
-                audioRecord.stop()
-            } else {
-                Log.e(TAG, "AudioRecord initialization failed - microphone access may be restricted")
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error verifying microphone access: ${e.message}", e)
-        } finally {
-            audioRecord?.release()
+            // Show error state on button
+            floatingButton?.updateState(EnhancedFloatingButton.RecordingState.IDLE)
         }
     }
 
     private fun stopRecording() {
-        mediaRecorder?.apply {
-            try {
-                Log.d(TAG, "Stopping recording...")
-                stop()
-                release()
-                Log.d(TAG, "Recording stopped successfully")
-                
-                // Start transcription
-                currentRecordingFile?.let { file ->
-                    Log.d(TAG, "Starting transcription for file: ${file.absolutePath}")
-                    transcribeRecording(file)
-                } ?: run {
-                    Log.e(TAG, "Cannot start transcription - recording file is null")
+        try {
+            // Update button state immediately to show stopping state
+            floatingButton?.updateState(EnhancedFloatingButton.RecordingState.STOPPING)
+            
+            // Cancel the timer update
+            timerRunnable?.let { handler.removeCallbacks(it) }
+            timerRunnable = null
+            
+            // Stop the MediaRecorder
+            mediaRecorder?.apply {
+                try {
+                    stop()
+                    reset()
+                    release()
+                } catch (e: Exception) {
+                    // Ignore runtime exceptions when stopping recorder
+                    Log.e(TAG, "Error stopping media recorder", e)
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error stopping recording: ${e.message}", e)
+            }
+            mediaRecorder = null
+            
+            Logger.recording("Recording stopped")
+            
+            // Process the recording file if it exists
+            currentRecordingFile?.let { file ->
+                if (file.exists() && file.length() > 0) {
+                    Logger.recording("Valid recording file found: ${file.absolutePath}")
+                    transcribeRecording(file)
+                } else {
+                    Logger.recording("Invalid or empty recording file")
+                    transcriptionText = null // Make sure we reset this
+                    floatingButton?.updateState(EnhancedFloatingButton.RecordingState.IDLE)
+                }
+            } ?: run {
+                Logger.recording("No recording file to process")
+                transcriptionText = null // Make sure we reset this
+                floatingButton?.updateState(EnhancedFloatingButton.RecordingState.IDLE)
+            }
+            
+        } catch (e: Exception) {
+            Logger.error("Error stopping recording", e)
+            transcriptionText = null // Make sure we reset this
+            floatingButton?.updateState(EnhancedFloatingButton.RecordingState.IDLE)
+        }
+    }
+    
+    private fun setupTimerUpdates() {
+        // Cancel any existing timer updates
+        timerRunnable?.let { handler.removeCallbacks(it) }
+        
+        timerRunnable = object : Runnable {
+            override fun run() {
+                if (isRecording) {
+                    // Calculate elapsed time in milliseconds
+                    val elapsedTime = System.currentTimeMillis() - recordingStartTime
+                    
+                    // Update timer display on the enhanced floating button
+                    floatingButton?.updateTimer(elapsedTime)
+                    
+                    // Schedule next update in 1 second
+                    handler.postDelayed(this, 1000)
+                }
             }
         }
-        mediaRecorder = null
+        
+        // Start timer updates immediately
+        handler.post(timerRunnable!!)
     }
 
     private fun transcribeRecording(audioFile: File) {
         isTranscribing = true
         transcriptionText = "Transcribing..."
-        updateFloatingButton()
+        // Update button to stopping state to show checkmark during transcription
+        floatingButton?.updateState(EnhancedFloatingButton.RecordingState.STOPPING)
         
         Logger.recording("Starting transcription process for file: ${audioFile.absolutePath}")
         Logger.recording("File exists: ${audioFile.exists()}, File size: ${audioFile.length()} bytes")
@@ -340,9 +402,9 @@ class FloatingButtonService : Service() {
         if (!audioFile.exists() || audioFile.length() == 0L) {
             val errorMsg = "Audio file is missing or empty"
             Logger.recording(errorMsg)
-            transcriptionText = errorMsg
+            transcriptionText = null // Reset this instead of setting error text
             isTranscribing = false
-            updateFloatingButton()
+            floatingButton?.updateState(EnhancedFloatingButton.RecordingState.IDLE)
             return
         }
         
@@ -355,10 +417,17 @@ class FloatingButtonService : Service() {
                     onSuccess = { response ->
                         Logger.transcript("Transcription successful: ${response.text}")
                         transcriptionText = response.text
+                        isTranscribing = false
                         
-                        // Update UI
+                        // Update UI to show saved state
                         withContext(Dispatchers.Main) {
-                            updateFloatingButton()
+                            floatingButton?.updateState(EnhancedFloatingButton.RecordingState.SAVED)
+                            
+                            // Schedule reset of transcriptionText after animation completes (3s total)
+                            handler.postDelayed({
+                                transcriptionText = null
+                                Log.d(TAG, "Reset transcriptionText to null after saved animation")
+                            }, 3000)
                         }
                         
                         // Save transcript to a file with the same base name as the audio file
@@ -366,8 +435,6 @@ class FloatingButtonService : Service() {
                             val transcriptFile = File(audioFile.parentFile, "${audioFile.nameWithoutExtension}.txt")
                             transcriptFile.writeText(response.text)
                             Logger.storage("Saved transcript to file: ${transcriptFile.absolutePath}")
-                            
-                            // Note: Notification removed as requested
                             
                             // Auto-copy to clipboard if enabled in settings
                             val prefs = PreferenceManager.getDefaultSharedPreferences(this@FloatingButtonService)
@@ -407,25 +474,26 @@ class FloatingButtonService : Service() {
                     onFailure = { error ->
                         val errorMsg = "Transcription failed: ${error.message}"
                         Logger.error(errorMsg, error)
-                        transcriptionText = errorMsg
+                        transcriptionText = null // Reset this instead of setting error text
                         
                         withContext(Dispatchers.Main) {
-                            updateFloatingButton()
+                            // Return to idle state on error
+                            floatingButton?.updateState(EnhancedFloatingButton.RecordingState.IDLE)
                         }
                     }
                 )
             } catch (e: Exception) {
                 val errorMsg = "Error during transcription: ${e.message}"
                 Logger.error(errorMsg, e)
-                transcriptionText = errorMsg
+                transcriptionText = null // Reset this instead of setting error text
                 
                 withContext(Dispatchers.Main) {
-                    updateFloatingButton()
+                    // Return to idle state on error
+                    floatingButton?.updateState(EnhancedFloatingButton.RecordingState.IDLE)
                 }
             } finally {
                 Logger.recording("Transcription process completed")
                 isTranscribing = false
-                updateFloatingButton()
             }
         }
     }
@@ -453,25 +521,29 @@ class FloatingButtonService : Service() {
     }
 
     override fun onDestroy() {
-        Log.d(TAG, "FloatingButtonService onDestroy - Starting cleanup")
-        try {
-            super.onDestroy()
-            if (isRecording) {
-                Log.d(TAG, "Stopping ongoing recording")
-                stopRecording()
+        super.onDestroy()
+        Log.d(TAG, "FloatingButtonService onDestroy")
+        
+        // Clean up timer if service is destroyed
+        timerRunnable?.let { handler.removeCallbacks(it) }
+        timerRunnable = null
+        
+        // Release mediaRecorder if still active
+        if (isRecording) {
+            try {
+                mediaRecorder?.stop()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error stopping media recorder during service destroy", e)
             }
-            serviceScope.cancel()
-            
-            // Remove the floating button
-            floatingButton?.remove()
-            floatingButton = null
-            isButtonActive = false
-            
-            Log.d(TAG, "Floating button removed successfully")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error during service cleanup", e)
+            mediaRecorder?.release()
+            mediaRecorder = null
         }
-        Log.d(TAG, "Service cleanup completed")
+        
+        // Cancel any coroutines
+        serviceScope.cancel()
+        
+        // Remove the floating button
+        removeFloatingButton()
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -502,6 +574,119 @@ class FloatingButtonService : Service() {
             .setPriority(NotificationCompat.PRIORITY_MIN) // Minimum priority
             .setSilent(true) // Make it silent
             .build()
+    }
+
+    private fun removeFloatingButton() {
+        try {
+            floatingButton?.remove()
+            isButtonActive = false
+            Log.d(TAG, "Floating button removed")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error removing floating button", e)
+        }
+    }
+
+    // Handle keyboard visibility changes to show/hide the floating button
+    private fun handleKeyboardVisibility(keyboardVisible: Boolean) {
+        try {
+            Log.d(TAG, "handleKeyboardVisibility - Keyboard visible: $keyboardVisible, Recording: $isRecording")
+            
+            // Get app minimization state
+            val isAppMinimized = SettingsFragment.isAppMinimized(this)
+            Log.d(TAG, "Received keyboard visibility change: keyboardVisible=$keyboardVisible, isRecording=$isRecording, isAppMinimized=$isAppMinimized")
+            
+            // Determine if we should show the button based on state and preferences
+            var shouldActuallyShow = keyboardVisible
+            
+            // Apply smart button behavior if enabled (always show when recording)
+            if (SettingsFragment.isSmartButtonBehaviorEnabled(this)) {
+                // Key logic: Button should show if (keyboard is active AND app is not minimized) OR we are recording
+                shouldActuallyShow = (keyboardVisible && !isAppMinimized) || isRecording
+                Log.d(TAG, "Smart button behavior enabled, adjusted shouldActuallyShow to: $shouldActuallyShow")
+            }
+            
+            Log.d(TAG, "Button currently active: $isButtonActive, should show: $shouldActuallyShow")
+            
+            // Force immediate hiding on minimization for better responsiveness
+            val forceImmediateHide = isAppMinimized && 
+                                   SettingsFragment.isSmartButtonBehaviorEnabled(this) && 
+                                   !isRecording
+            
+            if (shouldActuallyShow) {
+                if (!isButtonActive) {
+                    // Setup the button - this will restore its last position from SharedPreferences
+                    setupFloatingButton()
+                    // Button is shown during setup
+                    Log.d(TAG, "Showing floating button")
+                }
+            } else {
+                if (isButtonActive) {
+                    // Handle immediate removal
+                    if (forceImmediateHide) {
+                        removeFloatingButton()
+                        Log.d(TAG, "Immediately removing floating button due to minimization")
+                    } else {
+                        // Just remove the button
+                        removeFloatingButton()
+                        Log.d(TAG, "Hiding floating button")
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // Catch and log any exceptions to prevent service crashes
+            Log.e(TAG, "Error handling keyboard visibility change", e)
+        }
+    }
+
+    private fun createAudioFile(): File {
+        // Use the same timestamp format as before
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val fileName = "voice_memo_$timestamp.m4a"
+        // Save to the app's external files directory
+        val file = File(getExternalFilesDir(null), fileName)
+        Log.d(TAG, "Creating recording file: ${file.absolutePath}")
+        return file
+    }
+
+    /**
+     * Verify microphone access by creating a temporary AudioRecord instance.
+     * This ensures the AppOps for RECORD_AUDIO is properly registered.
+     */
+    private fun verifyMicrophoneAccess() {
+        // ... existing code ...
+    }
+
+    private fun updateFloatingButtonVisibility() {
+        // Simple implementation that just shows/hides based on keyboard visibility
+        if (isKeyboardVisible && !isRecording) {
+            // Hide floating button when keyboard is visible and not recording
+            floatingButton?.remove()
+        } else {
+            // Show floating button when keyboard is hidden or recording
+            if (isButtonActive && floatingButton == null) {
+                setupFloatingButton()
+            } else {
+                floatingButton?.show()
+            }
+        }
+    }
+
+    /**
+     * Temporarily hides the floating button during IME operations
+     */
+    private fun hideFloatingButton() {
+        Log.d(TAG, "Hiding floating button due to IME operation")
+        floatingButton?.remove()
+    }
+
+    /**
+     * Restores the floating button after IME operations
+     */
+    private fun restoreFloatingButton() {
+        if (isButtonActive && !isKeyboardVisible) {
+            Log.d(TAG, "Restoring floating button after IME operation")
+            setupFloatingButton()
+        }
     }
 
     companion object {

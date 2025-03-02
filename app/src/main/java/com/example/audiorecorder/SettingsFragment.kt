@@ -30,6 +30,7 @@ class SettingsFragment : Fragment() {
     private var isAutoInsertEnabled = false
     private var isAutoTranslateEnabled = false
     private var isAutoDeleteEnabled = false
+    private var isTagAudioEventsEnabled = false
     private var autoDeletePeriod = "1 month" // Default value
     private var selectedLanguage = "German" // Default value
 
@@ -42,6 +43,8 @@ class SettingsFragment : Fragment() {
         const val PREF_AUTO_DELETE_PERIOD = "auto_delete_period"
         const val PREF_SELECTED_LANGUAGE = "selected_language"
         const val PREF_AUTO_DETECT_LANGUAGE_ENABLED = "auto_detect_language_enabled"
+        const val PREF_SMART_BUTTON_BEHAVIOR = "smart_button_behavior"
+        const val PREF_TAG_AUDIO_EVENTS_ENABLED = "tag_audio_events_enabled"
         
         /**
          * Check if auto-detect language is enabled in settings
@@ -51,6 +54,51 @@ class SettingsFragment : Fragment() {
         fun isAutoDetectLanguageEnabled(context: Context): Boolean {
             val prefs = PreferenceManager.getDefaultSharedPreferences(context)
             return prefs.getBoolean(PREF_AUTO_DETECT_LANGUAGE_ENABLED, true) // Default to true
+        }
+        
+        /**
+         * Check if tagging audio events is enabled in settings
+         * @param context The context to access shared preferences
+         * @return true if tagging audio events is enabled, false otherwise
+         */
+        fun isTagAudioEventsEnabled(context: Context): Boolean {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+            return prefs.getBoolean(PREF_TAG_AUDIO_EVENTS_ENABLED, false) // Default to false
+        }
+        
+        /**
+         * Check if keyboard-only mode is enabled
+         * @param context The context to access shared preferences
+         * @return Always returns true as this behavior is now integrated into Smart Button Behavior
+         */
+        fun isKeyboardOnlyModeEnabled(context: Context): Boolean {
+            return true // Always return true as we're handling this via Smart Button Behavior now
+        }
+        
+        /**
+         * Check if smart button behavior is enabled
+         * @param context The context to access shared preferences
+         * @return true if smart button behavior is enabled (hide when minimized, show when recording)
+         */
+        fun isSmartButtonBehaviorEnabled(context: Context): Boolean {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+            return prefs.getBoolean(PREF_SMART_BUTTON_BEHAVIOR, true) // Default to true
+        }
+        
+        /**
+         * Check if the app is currently minimized
+         * @param context The context to access service state
+         * @return true if app is minimized, false if it's in foreground
+         * 
+         * Note: This is a stub implementation that always returns false, as the true state is managed by
+         * TranscriptAccessibilityService and passed via intents. This method is only used for testing
+         * and fallback purposes when the state is not available from the intent.
+         */
+        fun isAppMinimized(context: Context): Boolean {
+            // For keyboard visibility changes, we cannot determine app minimization state directly
+            // The real state is managed by TranscriptAccessibilityService and passed via intents
+            // This is just a fallback that assumes the app is not minimized
+            return false
         }
     }
 
@@ -86,6 +134,7 @@ class SettingsFragment : Fragment() {
         isAutoInsertEnabled = prefs.getBoolean(PREF_AUTO_INSERT_ENABLED, false)
         isAutoTranslateEnabled = prefs.getBoolean(PREF_AUTO_TRANSLATE_ENABLED, false)
         isAutoDeleteEnabled = prefs.getBoolean(PREF_AUTO_DELETE_ENABLED, false)
+        isTagAudioEventsEnabled = prefs.getBoolean(PREF_TAG_AUDIO_EVENTS_ENABLED, false)
         autoDeletePeriod = prefs.getString(PREF_AUTO_DELETE_PERIOD, "1 month") ?: "1 month"
         selectedLanguage = prefs.getString(PREF_SELECTED_LANGUAGE, "German") ?: "German"
         return binding.root
@@ -103,8 +152,23 @@ class SettingsFragment : Fragment() {
         setupAutoInsertSwitch()
         setupAutoTranslateSwitch()
         setupLanguageSpinner()
+        setupAutoDetectLanguageSwitch()
         setupAutoDeleteSwitch()
         setupAutoDeletePeriodSpinner()
+        setupTagAudioEventsSwitch()
+
+        // Set up smart button behavior switch
+        binding.switchSmartButtonBehavior.isChecked = prefs.getBoolean(PREF_SMART_BUTTON_BEHAVIOR, true)
+        binding.switchSmartButtonBehavior.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean(PREF_SMART_BUTTON_BEHAVIOR, isChecked).apply()
+            Logger.ui("Smart button behavior toggled: $isChecked")
+            
+            // Update the floating button service if it's running
+            if (isFloatingButtonVisible) {
+                val intent = Intent(requireContext(), FloatingButtonService::class.java)
+                requireContext().startService(intent)
+            }
+        }
 
         // Restore floating button state if it was visible
         if (isFloatingButtonVisible && hasRequiredPermissions()) {
@@ -301,6 +365,38 @@ class SettingsFragment : Fragment() {
         binding.languageInputLayout.isEnabled = isAutoTranslateEnabled
     }
     
+    private fun setupAutoDetectLanguageSwitch() {
+        // Get current value from preferences
+        val isAutoDetectLanguageEnabled = prefs.getBoolean(PREF_AUTO_DETECT_LANGUAGE_ENABLED, true)
+        
+        // Set initial state of the switch
+        binding.switchAutoDetectLanguage.isChecked = isAutoDetectLanguageEnabled
+        
+        // Show/hide the language dropdown based on auto-detect setting
+        binding.languageInputLayoutWhenAutoDetectOff.visibility = 
+            if (isAutoDetectLanguageEnabled) View.GONE else View.VISIBLE
+        
+        // Set up listener for switch changes
+        binding.switchAutoDetectLanguage.setOnCheckedChangeListener { _, isChecked ->
+            Logger.ui("Auto-detect language switch toggled: $isChecked")
+            
+            // Save to preferences
+            prefs.edit().putBoolean(PREF_AUTO_DETECT_LANGUAGE_ENABLED, isChecked).apply()
+            
+            // Show/hide the language dropdown based on auto-detect setting
+            binding.languageInputLayoutWhenAutoDetectOff.visibility = 
+                if (isChecked) View.GONE else View.VISIBLE
+            
+            // Show confirmation toast
+            val message = if (isChecked) {
+                "Language will be automatically detected in recordings"
+            } else {
+                "Language must be manually selected for recordings"
+            }
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        }
+    }
+    
     private fun setupAutoDeleteSwitch() {
         binding.autoDeleteSwitch.isChecked = isAutoDeleteEnabled
         binding.autoDeleteSwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -443,6 +539,23 @@ class SettingsFragment : Fragment() {
         
         // Notification permission is now optional
         return hasAudioPermission && hasOverlayPermission
+    }
+
+    private fun setupTagAudioEventsSwitch() {
+        binding.switchTagAudioEvents.isChecked = isTagAudioEventsEnabled
+        binding.switchTagAudioEvents.setOnCheckedChangeListener { _, isChecked ->
+            Logger.ui("Tag audio events switch toggled: $isChecked")
+            isTagAudioEventsEnabled = isChecked
+            prefs.edit().putBoolean(PREF_TAG_AUDIO_EVENTS_ENABLED, isChecked).apply()
+            
+            // Show confirmation toast
+            val message = if (isChecked) {
+                "Audio events (like laughter, footsteps) will be tagged in transcripts"
+            } else {
+                "Audio events will not be tagged in transcripts"
+            }
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onResume() {

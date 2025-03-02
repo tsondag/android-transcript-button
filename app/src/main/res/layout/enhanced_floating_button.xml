@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="8dp">
+
+    <!-- Outer circle button -->
+    <FrameLayout
+        android:id="@+id/button_outer"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:background="@drawable/floating_button_idle_background"
+        android:elevation="4dp">
+
+        <!-- Inner circle (button_inner) -->
+        <FrameLayout
+            android:id="@+id/button_inner"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:background="@drawable/floating_button_inner_circle"
+            android:elevation="4dp">
+
+            <!-- The dot that pulses/changes color -->
+            <View
+                android:id="@+id/dot"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
+                android:layout_gravity="center"
+                android:background="@drawable/dot_shape"
+                android:backgroundTint="@color/record_button_destructive"
+                android:elevation="6dp" />
+
+            <!-- Checkmark icon (initially invisible) -->
+            <ImageView
+                android:id="@+id/checkmark"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:elevation="6dp"
+                android:src="@drawable/ic_checkmark"
+                android:visibility="gone" />
+        </FrameLayout>
+    </FrameLayout>
+
+    <!-- Timer text below the button -->
+    <TextView
+        android:id="@+id/timer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginTop="64dp"
+        android:layout_marginBottom="-16dp"
+        android:textColor="@color/record_button_text"
+        android:textSize="14sp"
+        android:visibility="gone"
+        android:text="00:00" />
+</FrameLayout> 

@@ -4,7 +4,7 @@
     <solid android:color="@color/record_button_background" />
     <stroke
         android:width="2dp"
-        android:color="@color/record_button_destructive" />
+        android:color="@color/record_button_success" />
     <size
         android:width="64dp"
         android:height="64dp" />

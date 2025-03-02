@@ -9,4 +9,9 @@
     <color name="text_tertiary">#888888</color>
     <color name="colorPrimary">#2196F3</color>
     <color name="text_success">#4CAF50</color>
+    <!-- Recording Button Colors -->
+    <color name="record_button_destructive">#FF4136</color>
+    <color name="record_button_success">#2ECC40</color>
+    <color name="record_button_background">#FFFFFF</color>
+    <color name="record_button_text">#757575</color>
 </resources> 

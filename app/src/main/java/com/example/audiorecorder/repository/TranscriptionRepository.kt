@@ -38,10 +38,15 @@ class TranscriptionRepository(private val context: Context) {
             val isAutoDetectLanguageEnabled = SettingsFragment.isAutoDetectLanguageEnabled(context)
             Log.d(TAG, "Auto-detect language enabled: $isAutoDetectLanguageEnabled")
             
-            // Create parts list based on language setting
+            // Check if tagging audio events is enabled
+            val isTagAudioEventsEnabled = SettingsFragment.isTagAudioEventsEnabled(context)
+            Log.d(TAG, "Tag audio events enabled: $isTagAudioEventsEnabled")
+            
+            // Create parts list based on settings
             val parts = mutableListOf(
                 MultipartBody.Part.createFormData("file", audioFile.name, requestFile),
-                MultipartBody.Part.createFormData("model_id", "scribe_v1")
+                MultipartBody.Part.createFormData("model_id", "scribe_v1"),
+                MultipartBody.Part.createFormData("tag_audio_events", isTagAudioEventsEnabled.toString())
             )
             
             // Only add language_code if auto-detect is disabled
@@ -55,6 +60,7 @@ class TranscriptionRepository(private val context: Context) {
             Log.d(TAG, "Making API request with parameters:")
             Log.d(TAG, "- File name: ${audioFile.name}")
             Log.d(TAG, "- Model ID: scribe_v1")
+            Log.d(TAG, "- Tag audio events: $isTagAudioEventsEnabled")
             if (!isAutoDetectLanguageEnabled) {
                 Log.d(TAG, "- Language code: en")
             }

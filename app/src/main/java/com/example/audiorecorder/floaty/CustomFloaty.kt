@@ -45,6 +45,9 @@ class CustomFloaty(
         setupWindowParams()
         setupFloatingButton()
         setupTouchListener()
+        
+        // Restore saved position
+        loadSavedPosition()
     }
     
     private fun setupWindowParams() {
@@ -126,7 +129,10 @@ class CustomFloaty(
                     val moved = Math.abs(event.rawX - initialTouchX) > 10 || 
                                 Math.abs(event.rawY - initialTouchY) > 10
                     
-                    if (!moved) {
+                    if (moved) {
+                        // Save the current position when the button is released after moving
+                        saveCurrentPosition()
+                    } else {
                         onButtonClick()
                     }
                     true
@@ -139,11 +145,50 @@ class CustomFloaty(
     fun show() {
         if (!isShowing && checkOverlayPermission()) {
             try {
+                // Start with opacity 0 for fade-in animation
+                rootView.alpha = 0f
                 windowManager.addView(rootView, params)
                 isShowing = true
+                
+                // Fade in animation
+                rootView.animate()
+                    .alpha(1f)
+                    .setDuration(200)
+                    .start()
             } catch (e: Exception) {
                 Log.e("CustomFloaty", "Error showing floating button", e)
             }
+        }
+    }
+    
+    /**
+     * Fade in the button if it's already visible
+     */
+    fun fadeIn() {
+        if (isShowing) {
+            rootView.animate()
+                .alpha(1f)
+                .setDuration(200)
+                .start()
+        }
+    }
+    
+    /**
+     * Fade out the button with optional completion callback
+     */
+    fun fadeOut(onComplete: (() -> Unit)? = null) {
+        if (isShowing) {
+            rootView.animate()
+                .alpha(0f)
+                .setDuration(200)
+                .setListener(object : android.animation.AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: android.animation.Animator) {
+                        onComplete?.invoke()
+                    }
+                })
+                .start()
+        } else {
+            onComplete?.invoke()
         }
     }
     
@@ -178,5 +223,40 @@ class CustomFloaty(
         } else {
             true
         }
+    }
+    
+    /**
+     * Save the current position to SharedPreferences
+     */
+    private fun saveCurrentPosition() {
+        try {
+            val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
+            prefs.edit()
+                .putInt(PREF_BUTTON_X, params.x)
+                .putInt(PREF_BUTTON_Y, params.y)
+                .apply()
+            Log.d("CustomFloaty", "Saved button position: x=${params.x}, y=${params.y}")
+        } catch (e: Exception) {
+            Log.e("CustomFloaty", "Error saving button position", e)
+        }
+    }
+    
+    /**
+     * Load the saved position from SharedPreferences
+     */
+    private fun loadSavedPosition() {
+        try {
+            val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
+            params.x = prefs.getInt(PREF_BUTTON_X, 0)
+            params.y = prefs.getInt(PREF_BUTTON_Y, 100)
+            Log.d("CustomFloaty", "Loaded button position: x=${params.x}, y=${params.y}")
+        } catch (e: Exception) {
+            Log.e("CustomFloaty", "Error loading button position", e)
+        }
+    }
+    
+    companion object {
+        private const val PREF_BUTTON_X = "floating_button_x"
+        private const val PREF_BUTTON_Y = "floating_button_y"
     }
 } 
