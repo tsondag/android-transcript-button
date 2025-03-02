@@ -5,15 +5,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingHorizontal="16dp"
-    android:paddingVertical="16dp"
     android:background="?attr/selectableItemBackground">
 
     <!-- Date and playback info -->
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:id="@+id/dateTimeContainer"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -23,11 +26,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="12sp"
-            android:textColor="@color/text_secondary"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            tools:text="Today 13:45" />
+            android:textColor="#757575"
+            tools:text="Feb 01 - 12:00" />
 
         <TextView
             android:id="@+id/separatorDot"
@@ -35,44 +35,39 @@
             android:layout_height="wrap_content"
             android:text="•"
             android:textSize="12sp"
-            android:textColor="@color/text_secondary"
+            android:textColor="#757575"
             android:layout_marginStart="8dp"
-            app:layout_constraintStart_toEndOf="@id/dateTimeText"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            android:layout_marginEnd="8dp" />
 
         <ImageButton
             android:id="@+id/playButton"
-            android:layout_width="18dp"
-            android:layout_height="18dp"
-            android:layout_marginStart="8dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Play"
             android:src="@drawable/ic_play"
-            app:layout_constraintStart_toEndOf="@id/separatorDot"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:tint="@color/text_primary" />
+            android:padding="4dp"
+            app:tint="#000000" />
 
         <TextView
             android:id="@+id/durationText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="12sp"
-            android:textColor="@color/text_secondary"
+            android:textColor="#757575"
             android:layout_marginStart="4dp"
-            app:layout_constraintStart_toEndOf="@id/playButton"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            tools:text="00:45" />
+            tools:text="00:15" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 
     <!-- Transcript content and action buttons -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/dateTimeContainer"
@@ -83,7 +78,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textSize="14sp"
-            android:textColor="@color/text_primary"
+            android:textColor="#616161"
             android:maxLines="2"
             android:ellipsize="end"
             android:lineSpacingMultiplier="1.2"
@@ -91,31 +86,33 @@
             app:layout_constraintEnd_toStartOf="@id/copyButton"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            tools:text="I was wondering if it's possible to transcribe voice notes to Dutch language and how much would that cost per minute of audio?" />
+            tools:text="Need to buy milk, eggs, bread, and some vegetables for dinner tonight." />
 
         <ImageButton
             android:id="@+id/copyButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Copy"
             android:src="@drawable/ic_copy"
+            android:layout_marginStart="8dp"
             app:layout_constraintEnd_toStartOf="@id/menuButton"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:tint="@color/text_primary" />
+            app:tint="#616161" />
 
         <ImageButton
             android:id="@+id/menuButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="More options"
             android:src="@drawable/ic_more_vert"
+            android:layout_marginStart="4dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:tint="@color/text_primary" />
+            app:tint="#616161" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

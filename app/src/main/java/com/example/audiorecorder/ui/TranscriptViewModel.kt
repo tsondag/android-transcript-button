@@ -119,7 +119,8 @@ class TranscriptViewModel(application: Application) : AndroidViewModel(applicati
                 Logger.ui("Found ${recordings.size} recordings with audio files")
                 Logger.ui("Found ${recordings.count { it.transcript != null }} recordings with transcripts")
                 
-                _transcripts.value = recordings
+                // Sort by timestamp ascending (oldest first) so newest items appear at the bottom
+                _transcripts.value = recordings.sortedBy { it.timestamp }
                 updateFilteredTranscripts()
             } catch (e: Exception) {
                 Logger.ui("Error loading recordings", e)
@@ -182,8 +183,8 @@ class TranscriptViewModel(application: Application) : AndroidViewModel(applicati
                     currentList.removeAt(existingIndex)
                 }
                 
-                // Add the new transcript at the beginning
-                currentList.add(0, newTranscript)
+                // Add the new transcript at the end (since we're showing newest at bottom)
+                currentList.add(newTranscript)
                 _transcripts.value = currentList
                 updateFilteredTranscripts()
                 Logger.ui("Added new transcript to list: ${transcript.take(50)}...")
