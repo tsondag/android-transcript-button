@@ -31,7 +31,7 @@ class SettingsFragment : Fragment() {
     private var isAutoTranslateEnabled = false
     private var isAutoDeleteEnabled = false
     private var isTagAudioEventsEnabled = false
-    private var autoDeletePeriod = "1 month" // Default value
+    private var autoDeletePeriod = "1 day" // Default value
     private var selectedLanguage = "German" // Default value
 
     companion object {
@@ -45,6 +45,7 @@ class SettingsFragment : Fragment() {
         const val PREF_AUTO_DETECT_LANGUAGE_ENABLED = "auto_detect_language_enabled"
         const val PREF_SMART_BUTTON_BEHAVIOR = "smart_button_behavior"
         const val PREF_TAG_AUDIO_EVENTS_ENABLED = "tag_audio_events_enabled"
+        const val PREF_NOTIFICATION_TOGGLE_ENABLED = "notification_toggle_enabled"
         
         /**
          * Check if auto-detect language is enabled in settings
@@ -64,6 +65,22 @@ class SettingsFragment : Fragment() {
         fun isTagAudioEventsEnabled(context: Context): Boolean {
             val prefs = PreferenceManager.getDefaultSharedPreferences(context)
             return prefs.getBoolean(PREF_TAG_AUDIO_EVENTS_ENABLED, false) // Default to false
+        }
+        
+        /**
+         * Check if the notification toggle is enabled (default: true which means button is visible)
+         */
+        fun isNotificationToggleEnabled(context: Context): Boolean {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+            return prefs.getBoolean(PREF_NOTIFICATION_TOGGLE_ENABLED, true) // Default to true = button visible
+        }
+        
+        /**
+         * Save the notification toggle state
+         */
+        fun setNotificationToggleEnabled(context: Context, enabled: Boolean) {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+            prefs.edit().putBoolean(PREF_NOTIFICATION_TOGGLE_ENABLED, enabled).apply()
         }
         
         /**
@@ -135,7 +152,7 @@ class SettingsFragment : Fragment() {
         isAutoTranslateEnabled = prefs.getBoolean(PREF_AUTO_TRANSLATE_ENABLED, false)
         isAutoDeleteEnabled = prefs.getBoolean(PREF_AUTO_DELETE_ENABLED, false)
         isTagAudioEventsEnabled = prefs.getBoolean(PREF_TAG_AUDIO_EVENTS_ENABLED, false)
-        autoDeletePeriod = prefs.getString(PREF_AUTO_DELETE_PERIOD, "1 month") ?: "1 month"
+        autoDeletePeriod = prefs.getString(PREF_AUTO_DELETE_PERIOD, "1 day") ?: "1 day"
         selectedLanguage = prefs.getString(PREF_SELECTED_LANGUAGE, "German") ?: "German"
         return binding.root
     }
@@ -421,7 +438,7 @@ class SettingsFragment : Fragment() {
     }
     
     private fun setupAutoDeletePeriodSpinner() {
-        val periods = arrayOf("1 day", "1 week", "1 month", "3 months", "6 months", "1 year")
+        val periods = arrayOf("1 hour", "4 hours", "1 day", "1 week", "1 month", "3 months", "6 months", "1 year")
         
         // Create adapter for the AutoCompleteTextView
         val adapter = ArrayAdapter(
@@ -511,17 +528,17 @@ class SettingsFragment : Fragment() {
             return
         }
         
-        // Check if notification permission is granted (optional for Android 13+)
-        val hasNotificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requireContext().checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        } else {
-            true
-        }
-        
-        // Start service with or without notification
+        // Create intent for the service
         val intent = Intent(requireContext(), FloatingButtonService::class.java)
-        intent.putExtra("use_notification", hasNotificationPermission)
-        requireContext().startService(intent)
+        
+        // Start as foreground service for Android O and above
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            requireContext().startForegroundService(intent)
+            Logger.ui("Started floating button as foreground service")
+        } else {
+            requireContext().startService(intent)
+            Logger.ui("Started floating button service")
+        }
         
         Toast.makeText(requireContext(), "Floating button enabled", Toast.LENGTH_SHORT).show()
         Logger.ui("Floating button service started")

@@ -98,6 +98,14 @@ class AutoDeleteWorker(
         val calendar = Calendar.getInstance()
         
         return when (period) {
+            "1 hour" -> {
+                calendar.add(Calendar.HOUR_OF_DAY, -1)
+                calendar.timeInMillis
+            }
+            "4 hours" -> {
+                calendar.add(Calendar.HOUR_OF_DAY, -4)
+                calendar.timeInMillis
+            }
             "1 day" -> {
                 calendar.add(Calendar.DAY_OF_YEAR, -1)
                 calendar.timeInMillis

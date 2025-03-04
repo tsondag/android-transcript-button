@@ -33,21 +33,21 @@ class TranscriptViewModel(application: Application) : AndroidViewModel(applicati
     }
     
     fun setSearchQuery(query: String) {
-        Logger.ui("Setting search query: '$query'")
+        Logger.ui("Setting search query: '${query.take(50)}${if (query.length > 50) "..." else ""}'")
         _searchQuery.value = query
         updateFilteredTranscripts()
     }
     
     private fun updateFilteredTranscripts() {
-        val query = _searchQuery.value
+        val query = _searchQuery.value.trim()
         val allTranscripts = _transcripts.value
         
         _filteredTranscripts.value = if (query.isBlank()) {
             allTranscripts
         } else {
             allTranscripts.filter { item ->
-                item.transcript?.contains(query, ignoreCase = true) == true ||
-                item.file.nameWithoutExtension.contains(query, ignoreCase = true)
+                (item.transcript?.contains(query, ignoreCase = true) == true) ||
+                (item.file.nameWithoutExtension.contains(query, ignoreCase = true))
             }
         }
         
@@ -190,6 +190,42 @@ class TranscriptViewModel(application: Application) : AndroidViewModel(applicati
                 Logger.ui("Added new transcript to list: ${transcript.take(50)}...")
             } catch (e: Exception) {
                 Logger.ui("Failed to save transcript", e)
+            }
+        }
+    }
+    
+    /**
+     * Updates an existing transcript with new text
+     * @param item The TranscriptItem to update
+     * @param newText The new transcript text
+     */
+    fun updateTranscriptText(item: TranscriptItem, newText: String) {
+        Logger.ui("Updating transcript for file: ${item.file.name}")
+        
+        viewModelScope.launch {
+            try {
+                // Save the updated text to file
+                val transcriptFile = File(item.file.parentFile, "${item.file.nameWithoutExtension}.txt")
+                transcriptFile.writeText(newText)
+                Logger.ui("Updated transcript in file: ${transcriptFile.name}")
+                
+                // Create updated item
+                val updatedItem = item.copy(transcript = newText)
+                
+                // Update in the list
+                val currentList = _transcripts.value.toMutableList()
+                val index = currentList.indexOfFirst { it.file.absolutePath == item.file.absolutePath }
+                
+                if (index != -1) {
+                    currentList[index] = updatedItem
+                    _transcripts.value = currentList
+                    updateFilteredTranscripts()
+                    Logger.ui("Updated transcript in list: ${newText.take(50)}...")
+                } else {
+                    Logger.ui("Failed to update transcript: item not found in list")
+                }
+            } catch (e: Exception) {
+                Logger.ui("Failed to update transcript", e)
             }
         }
     }

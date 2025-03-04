@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.audiorecorder.utils.Logger
 import java.io.File
+import java.io.Serializable
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -23,7 +24,7 @@ data class TranscriptItem(
     val file: File,
     val transcript: String? = null,
     val timestamp: Long = System.currentTimeMillis()
-)
+) : Serializable
 
 @Composable
 fun TranscriptList(

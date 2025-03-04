@@ -28,6 +28,7 @@ import com.example.audiorecorder.service.VoiceRecordingService
 import com.example.audiorecorder.ui.TranscriptItem
 import com.example.audiorecorder.ui.TranscriptViewModel
 import com.example.audiorecorder.ui.VoiceMemoAdapter
+import com.example.audiorecorder.ui.VoiceMemoEditorBottomSheet
 import com.example.audiorecorder.utils.AudioPlaybackManager
 import com.example.audiorecorder.utils.ClipboardUtils
 import com.example.audiorecorder.utils.Logger
@@ -309,24 +310,50 @@ class VoiceMemoActivity : AppCompatActivity(), AudioPlaybackManager.PlaybackCall
         val searchEditText = findViewById<EditText>(R.id.searchEditText)
         val clearSearchButton = findViewById<ImageButton>(R.id.clearSearchButton)
         
-        searchEditText.setOnEditorActionListener { _, _, _ ->
-            val query = searchEditText.text.toString()
-            viewModel.setSearchQuery(query)
-            true
+        // Use a handler for debouncing search queries
+        val handler = android.os.Handler(android.os.Looper.getMainLooper())
+        var searchRunnable: Runnable? = null
+        
+        searchEditText.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
+                val query = searchEditText.text.toString()
+                viewModel.setSearchQuery(query)
+                return@setOnEditorActionListener true
+            }
+            false
         }
         
-        // Show clear button when text is entered
+        // Show clear button when text is entered and handle search
         searchEditText.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                clearSearchButton.visibility = if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
-                
-                // Update search query in real-time
-                viewModel.setSearchQuery(s?.toString() ?: "")
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // Not used
             }
             
-            override fun afterTextChanged(s: android.text.Editable?) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                // Update clear button visibility
+                val query = s?.toString() ?: ""
+                clearSearchButton.visibility = if (query.isEmpty()) View.GONE else View.VISIBLE
+                
+                // Remove any pending search queries
+                searchRunnable?.let { handler.removeCallbacks(it) }
+                
+                // Schedule a new search with a short delay to avoid too frequent updates
+                searchRunnable = Runnable {
+                    Logger.ui("Performing search for query: '$query'")
+                    viewModel.setSearchQuery(query)
+                }.also {
+                    // Only add a delay if it's not an empty query
+                    if (query.isNotEmpty()) {
+                        handler.postDelayed(it, 150) // 150ms delay for typing
+                    } else {
+                        handler.post(it) // No delay for empty query
+                    }
+                }
+            }
+            
+            override fun afterTextChanged(s: android.text.Editable?) {
+                // Not used
+            }
         })
         
         clearSearchButton.setOnClickListener {
@@ -350,16 +377,33 @@ class VoiceMemoActivity : AppCompatActivity(), AudioPlaybackManager.PlaybackCall
     }
     
     private fun handleTranscriptClick(transcript: TranscriptItem) {
-        // For now, just copy the transcript to clipboard
-        transcript.transcript?.let { text ->
-            if (text != "Transcribing..." && text != "Transcription failed") {
-                ClipboardUtils.copyToClipboard(this, text, "Transcript", true)
-            } else {
-                Toast.makeText(this, "Transcript not available yet", Toast.LENGTH_SHORT).show()
+        Logger.ui("Opening editor for transcript: ${transcript.file.name}")
+        
+        // Create and show the bottom sheet
+        val bottomSheet = VoiceMemoEditorBottomSheet.newInstance(transcript)
+        bottomSheet.setCallback(object : VoiceMemoEditorBottomSheet.EditCallback {
+            override fun onTranscriptSaved(transcript: TranscriptItem, newText: String) {
+                Logger.ui("Saving edited transcript: ${transcript.file.name}")
+                viewModel.updateTranscriptText(transcript, newText)
             }
-        } ?: run {
-            Toast.makeText(this, "No transcript available", Toast.LENGTH_SHORT).show()
-        }
+            
+            override fun onTranscriptDeleted(transcript: TranscriptItem) {
+                Logger.ui("Deleting transcript from editor: ${transcript.file.name}")
+                deleteVoiceMemo(transcript)
+            }
+            
+            override fun onTranscriptShared(transcript: TranscriptItem) {
+                Logger.ui("Sharing transcript from editor: ${transcript.file.name}")
+                shareTranscript(transcript)
+            }
+            
+            override fun onTranscriptPrint(transcript: TranscriptItem) {
+                Logger.ui("Printing transcript from editor: ${transcript.file.name}")
+                printTranscript(transcript)
+            }
+        })
+        
+        bottomSheet.show(supportFragmentManager, "VoiceMemoEditor")
     }
 
     override fun onBackPressed() {
