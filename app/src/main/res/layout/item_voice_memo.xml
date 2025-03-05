@@ -7,7 +7,7 @@
     android:layout_height="wrap_content"
     android:background="@color/background"
     android:paddingHorizontal="16dp"
-    android:paddingVertical="16dp">
+    android:paddingTop="16dp">
 
     <!-- Date and playback info -->
     <LinearLayout
@@ -24,8 +24,8 @@
             android:id="@+id/dateTimeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="13sp"
-            android:fontFamily="sans-serif"
+            android:textSize="14.3sp"
+            android:fontFamily="@font/figtree_regular"
             android:textColor="@color/muted_foreground"
             tools:text="Feb 01 - 12:00" />
 
@@ -34,7 +34,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="•"
-            android:textSize="13sp"
+            android:textSize="14.3sp"
             android:textColor="@color/muted_foreground"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp" />
@@ -60,7 +60,8 @@
             android:id="@+id/durationText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="13sp"
+            android:textSize="14.3sp"
+            android:fontFamily="@font/figtree_regular"
             android:textColor="@color/muted_foreground"
             android:layout_marginStart="4dp"
             tools:text="00:15" />
@@ -69,19 +70,22 @@
 
     <!-- Transcript content and action buttons -->
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/transcriptContainer"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:paddingBottom="16dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/dateTimeContainer"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toTopOf="@id/dividerLine">
 
         <TextView
             android:id="@+id/transcriptText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textSize="15sp"
+            android:textSize="16.5sp"
+            android:fontFamily="@font/figtree_medium"
             android:textColor="@color/foreground"
             android:maxLines="2"
             android:ellipsize="end"
@@ -139,6 +143,7 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <View
+        android:id="@+id/dividerLine"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@color/border"
