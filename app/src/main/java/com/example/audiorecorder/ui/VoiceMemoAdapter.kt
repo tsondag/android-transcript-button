@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.audiorecorder.R
+import com.google.android.material.button.MaterialButton
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -70,10 +71,10 @@ class VoiceMemoAdapter(
     inner class VoiceMemoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val dateTimeText: TextView = itemView.findViewById(R.id.dateTimeText)
         private val durationText: TextView = itemView.findViewById(R.id.durationText)
-        private val playButton: ImageButton = itemView.findViewById(R.id.playButton)
+        private val playButton: MaterialButton = itemView.findViewById(R.id.playButton)
         private val transcriptText: TextView = itemView.findViewById(R.id.transcriptText)
-        private val copyButton: ImageButton = itemView.findViewById(R.id.copyButton)
-        private val menuButton: ImageButton = itemView.findViewById(R.id.menuButton)
+        private val copyButton: MaterialButton = itemView.findViewById(R.id.copyButton)
+        private val menuButton: MaterialButton = itemView.findViewById(R.id.menuButton)
 
         init {
             itemView.setOnClickListener {
@@ -108,7 +109,7 @@ class VoiceMemoAdapter(
 
         fun updatePlayButton(item: TranscriptItem) {
             val isPlaying = playingFile?.absolutePath == item.file.absolutePath
-            playButton.setImageResource(
+            playButton.setIconResource(
                 if (isPlaying) R.drawable.ic_stop else R.drawable.ic_play
             )
             playButton.contentDescription = 

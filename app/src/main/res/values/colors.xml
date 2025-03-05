@@ -1,17 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Base colors -->
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
-    <color name="gray_light">#F7F9FC</color>
-    <color name="gray_medium">#E6EAF0</color>
-    <color name="text_primary">#333333</color>
-    <color name="text_secondary">#555555</color>
-    <color name="text_tertiary">#888888</color>
-    <color name="colorPrimary">#2196F3</color>
-    <color name="text_success">#4CAF50</color>
-    <!-- Recording Button Colors -->
-    <color name="record_button_destructive">#FF4136</color>
-    <color name="record_button_success">#2ECC40</color>
-    <color name="record_button_background">#FFFFFF</color>
-    <color name="record_button_text">#757575</color>
+    
+    <!-- Light theme colors -->
+    <color name="background">#FFFFFF</color>
+    <color name="foreground">#030712</color>
+    <color name="card">#FFFFFF</color>
+    <color name="card_foreground">#030712</color>
+    <color name="popover">#FFFFFF</color>
+    <color name="popover_foreground">#030712</color>
+    <color name="primary">#18181B</color>
+    <color name="primary_foreground">#FAFAFA</color>
+    <color name="secondary">#F1F5F9</color>
+    <color name="secondary_foreground">#18181B</color>
+    <color name="muted">#F1F5F9</color>
+    <color name="muted_foreground">#64748B</color>
+    <color name="accent">#F1F5F9</color>
+    <color name="accent_foreground">#18181B</color>
+    <color name="destructive">#EF4444</color>
+    <color name="destructive_foreground">#FAFAFA</color>
+    <color name="border">#E2E8F0</color>
+    <color name="input">#E2E8F0</color>
+    <color name="ring">#030712</color>
+    
+    <!-- Dark theme colors -->
+    <color name="dark_background">#030712</color>
+    <color name="dark_foreground">#FAFAFA</color>
+    <color name="dark_card">#030712</color>
+    <color name="dark_card_foreground">#FAFAFA</color>
+    <color name="dark_popover">#030712</color>
+    <color name="dark_popover_foreground">#FAFAFA</color>
+    <color name="dark_primary">#FAFAFA</color>
+    <color name="dark_primary_foreground">#18181B</color>
+    <color name="dark_secondary">#27272A</color>
+    <color name="dark_secondary_foreground">#FAFAFA</color>
+    <color name="dark_muted">#27272A</color>
+    <color name="dark_muted_foreground">#A1A1AA</color>
+    <color name="dark_accent">#27272A</color>
+    <color name="dark_accent_foreground">#FAFAFA</color>
+    <color name="dark_destructive">#7F1D1D</color>
+    <color name="dark_destructive_foreground">#FAFAFA</color>
+    <color name="dark_border">#27272A</color>
+    <color name="dark_input">#27272A</color>
+    <color name="dark_ring">#D4D4D8</color>
+    
+    <!-- Misc colors from original file -->
+    <color name="gray_light">#F8F9FA</color>
+    <color name="gray_medium">#E9ECEF</color>
+    <color name="gray_dark">#ADB5BD</color>
+    <color name="text_primary">#212529</color>
+    <color name="text_secondary">#495057</color>
+    <color name="text_tertiary">#6C757D</color>
+    <color name="text_success">#20C997</color>
+    <color name="colorPrimary">#0D6EFD</color>
+    <color name="colorPrimaryDark">#0A58CA</color>
+    <color name="colorAccent">#6610F2</color>
+    <color name="colorSuccess">#20C997</color>
+    <color name="colorWarning">#FFC107</color>
+    <color name="colorDanger">#DC3545</color>
+    <color name="record_button_destructive">@color/destructive</color>
+    <color name="record_button_success">@color/colorSuccess</color>
+    <color name="record_button_background">@color/white</color>
+    <color name="record_button_text">@color/text_tertiary</color>
+    <color name="background_main">@color/background</color>
+    <color name="background_card">@color/secondary</color>
+    <color name="background_item">@color/card</color>
+    <color name="divider">@color/border</color>
 </resources> 

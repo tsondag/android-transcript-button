@@ -1,6 +1,8 @@
 package com.example.audiorecorder
 
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.os.Build
 import android.os.Bundle
 import android.print.PrintAttributes
 import android.print.PrintDocumentAdapter
@@ -19,10 +21,12 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.audiorecorder.databinding.ActivityVoiceMemosBinding
+import com.example.audiorecorder.service.FloatingButtonService
 import com.example.audiorecorder.service.TranscriptionService
 import com.example.audiorecorder.service.VoiceRecordingService
 import com.example.audiorecorder.ui.TranscriptItem
@@ -33,6 +37,7 @@ import com.example.audiorecorder.utils.AudioPlaybackManager
 import com.example.audiorecorder.utils.ClipboardUtils
 import com.example.audiorecorder.utils.Logger
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -108,7 +113,7 @@ class VoiceMemoActivity : AppCompatActivity(), AudioPlaybackManager.PlaybackCall
         // We're directly using the view from the binding
         setSupportActionBar(null) // We're handling our toolbar manually
         
-        val settingsButton = findViewById<ImageButton>(R.id.settingsButton)
+        val settingsButton = findViewById<MaterialButton>(R.id.settingsButton)
         settingsButton.setOnClickListener {
             // Open SettingsActivity
             val intent = Intent(this, SettingsActivity::class.java)
@@ -307,59 +312,72 @@ class VoiceMemoActivity : AppCompatActivity(), AudioPlaybackManager.PlaybackCall
     }
     
     private fun setupSearchBar() {
+        Logger.ui("Setting up search bar")
         val searchEditText = findViewById<EditText>(R.id.searchEditText)
         val clearSearchButton = findViewById<ImageButton>(R.id.clearSearchButton)
+        val micToggleButton = findViewById<MaterialButton>(R.id.micToggleButton)
         
-        // Use a handler for debouncing search queries
-        val handler = android.os.Handler(android.os.Looper.getMainLooper())
-        var searchRunnable: Runnable? = null
+        // Set initial mic button state based on saved preference
+        val isMicEnabled = SettingsFragment.isNotificationToggleEnabled(this)
+        updateMicButtonState(isMicEnabled)
         
-        searchEditText.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH) {
-                val query = searchEditText.text.toString()
-                viewModel.setSearchQuery(query)
-                return@setOnEditorActionListener true
-            }
-            false
+        // Setup mic toggle button
+        micToggleButton.setOnClickListener {
+            val newState = !SettingsFragment.isNotificationToggleEnabled(this)
+            updateMicButtonState(newState)
         }
         
-        // Show clear button when text is entered and handle search
+        // Setup search functionality
         searchEditText.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                // Not used
-            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                // Update clear button visibility
                 val query = s?.toString() ?: ""
-                clearSearchButton.visibility = if (query.isEmpty()) View.GONE else View.VISIBLE
-                
-                // Remove any pending search queries
-                searchRunnable?.let { handler.removeCallbacks(it) }
-                
-                // Schedule a new search with a short delay to avoid too frequent updates
-                searchRunnable = Runnable {
-                    Logger.ui("Performing search for query: '$query'")
-                    viewModel.setSearchQuery(query)
-                }.also {
-                    // Only add a delay if it's not an empty query
-                    if (query.isNotEmpty()) {
-                        handler.postDelayed(it, 150) // 150ms delay for typing
-                    } else {
-                        handler.post(it) // No delay for empty query
-                    }
-                }
+                clearSearchButton.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
+                viewModel.setSearchQuery(query)
             }
             
-            override fun afterTextChanged(s: android.text.Editable?) {
-                // Not used
-            }
+            override fun afterTextChanged(s: android.text.Editable?) {}
         })
         
         clearSearchButton.setOnClickListener {
             searchEditText.text.clear()
-            viewModel.setSearchQuery("")
             clearSearchButton.visibility = View.GONE
+        }
+    }
+    
+    private fun updateMicButtonState(isEnabled: Boolean) {
+        val micToggleButton = findViewById<MaterialButton>(R.id.micToggleButton)
+        
+        if (isEnabled) {
+            // Mic is enabled
+            micToggleButton.icon = ContextCompat.getDrawable(this, R.drawable.ic_mic)
+            micToggleButton.backgroundTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(this, R.color.colorSuccess)
+            )
+        } else {
+            // Mic is disabled
+            micToggleButton.icon = ContextCompat.getDrawable(this, R.drawable.ic_mic_off_with_line)
+            micToggleButton.backgroundTintList = ColorStateList.valueOf(
+                ContextCompat.getColor(this, R.color.destructive)
+            )
+        }
+        
+        // Save the state to preferences
+        SettingsFragment.setNotificationToggleEnabled(this, isEnabled)
+        
+        // Update the floating button service state
+        val intent = Intent(this, FloatingButtonService::class.java)
+        intent.action = if (isEnabled) {
+            FloatingButtonService.ACTION_ENABLE
+        } else {
+            FloatingButtonService.ACTION_DISABLE
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
         }
     }
     

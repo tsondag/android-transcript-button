@@ -105,6 +105,13 @@ class MainActivity : ComponentActivity() {
             android.util.Log.d("AudioRecorder", "Requesting audio permission from floating button callback (onNewIntent)")
             requestPermissionLauncher.launch(android.Manifest.permission.RECORD_AUDIO)
         }
+        
+        // Handle settings open action from notification
+        if (intent?.action == FloatingButtonService.ACTION_OPEN_SETTINGS) {
+            android.util.Log.d("AudioRecorder", "Opening settings from notification")
+            val settingsIntent = Intent(this, SettingsActivity::class.java)
+            startActivity(settingsIntent)
+        }
     }
 
     private fun checkAndRequestOverlayPermission() {

@@ -643,15 +643,22 @@
     <color name="abc_search_url_text_normal">#7fa87f</color>
     <color name="abc_search_url_text_pressed">@android:color/black</color>
     <color name="abc_search_url_text_selected">@android:color/black</color>
+    <color name="accent">#F1F5F9</color>
+    <color name="accent_foreground">#18181B</color>
     <color name="accent_material_dark">@color/material_deep_teal_200</color>
     <color name="accent_material_light">@color/material_deep_teal_500</color>
     <color name="androidx_core_ripple_material_light">#1f000000</color>
     <color name="androidx_core_secondary_text_default_material_light">#8a000000</color>
+    <color name="background">#FFFFFF</color>
+    <color name="background_card">@color/secondary</color>
     <color name="background_floating_material_dark">@color/material_grey_800</color>
     <color name="background_floating_material_light">@android:color/white</color>
+    <color name="background_item">@color/card</color>
+    <color name="background_main">@color/background</color>
     <color name="background_material_dark">@color/material_grey_850</color>
     <color name="background_material_light">@color/material_grey_50</color>
     <color name="black">#000000</color>
+    <color name="border">#E2E8F0</color>
     <color name="bright_foreground_disabled_material_dark">#80ffffff</color>
     <color name="bright_foreground_disabled_material_light">#80000000</color>
     <color name="bright_foreground_inverse_material_dark">@color/bright_foreground_material_light</color>
@@ -662,11 +669,37 @@
     <color name="button_material_light">#ffd6d7d7</color>
     <color name="call_notification_answer_color">#1d873b</color>
     <color name="call_notification_decline_color">#d93025</color>
+    <color name="card">#FFFFFF</color>
+    <color name="card_foreground">#030712</color>
     <color name="cardview_dark_background">#FF424242</color>
     <color name="cardview_light_background">#FFFFFFFF</color>
     <color name="cardview_shadow_end_color">#03000000</color>
     <color name="cardview_shadow_start_color">#37000000</color>
-    <color name="colorPrimary">#2196F3</color>
+    <color name="colorAccent">#6610F2</color>
+    <color name="colorDanger">#DC3545</color>
+    <color name="colorPrimary">#0D6EFD</color>
+    <color name="colorPrimaryDark">#0A58CA</color>
+    <color name="colorSuccess">#20C997</color>
+    <color name="colorWarning">#FFC107</color>
+    <color name="dark_accent">#27272A</color>
+    <color name="dark_accent_foreground">#FAFAFA</color>
+    <color name="dark_background">#030712</color>
+    <color name="dark_border">#27272A</color>
+    <color name="dark_card">#030712</color>
+    <color name="dark_card_foreground">#FAFAFA</color>
+    <color name="dark_destructive">#7F1D1D</color>
+    <color name="dark_destructive_foreground">#FAFAFA</color>
+    <color name="dark_foreground">#FAFAFA</color>
+    <color name="dark_input">#27272A</color>
+    <color name="dark_muted">#27272A</color>
+    <color name="dark_muted_foreground">#A1A1AA</color>
+    <color name="dark_popover">#030712</color>
+    <color name="dark_popover_foreground">#FAFAFA</color>
+    <color name="dark_primary">#FAFAFA</color>
+    <color name="dark_primary_foreground">#18181B</color>
+    <color name="dark_ring">#D4D4D8</color>
+    <color name="dark_secondary">#27272A</color>
+    <color name="dark_secondary_foreground">#FAFAFA</color>
     <color name="design_bottom_navigation_shadow_color">#14000000</color>
     <color name="design_dark_default_color_background">#121212</color>
     <color name="design_dark_default_color_error">#CF6679</color>
@@ -702,18 +735,24 @@
     <color name="design_fab_stroke_top_inner_color">#1AFFFFFF</color>
     <color name="design_fab_stroke_top_outer_color">#2EFFFFFF</color>
     <color name="design_snackbar_background_color">#323232</color>
+    <color name="destructive">#EF4444</color>
+    <color name="destructive_foreground">#FAFAFA</color>
     <color name="dim_foreground_disabled_material_dark">#80bebebe</color>
     <color name="dim_foreground_disabled_material_light">#80323232</color>
     <color name="dim_foreground_material_dark">#ffbebebe</color>
     <color name="dim_foreground_material_light">#ff323232</color>
+    <color name="divider">@color/border</color>
     <color name="error_color_material_dark">#ff7043</color>
     <color name="error_color_material_light">#ff5722</color>
+    <color name="foreground">#030712</color>
     <color name="foreground_material_dark">@android:color/white</color>
     <color name="foreground_material_light">@android:color/black</color>
-    <color name="gray_light">#F7F9FC</color>
-    <color name="gray_medium">#E6EAF0</color>
+    <color name="gray_dark">#ADB5BD</color>
+    <color name="gray_light">#F8F9FA</color>
+    <color name="gray_medium">#E9ECEF</color>
     <color name="highlighted_text_material_dark">#6680cbc4</color>
     <color name="highlighted_text_material_light">#66009688</color>
+    <color name="input">#E2E8F0</color>
     <color name="m3_ref_palette_black">#ff000000</color>
     <color name="m3_ref_palette_error0">#ff000000</color>
     <color name="m3_ref_palette_error10">#ff410e0b</color>
@@ -951,19 +990,32 @@
     <color name="mtrl_textinput_filled_box_default_background_color">#0A000000</color>
     <color name="mtrl_textinput_focused_box_stroke_color">#00000000</color>
     <color name="mtrl_textinput_hovered_box_stroke_color">#DE000000</color>
+    <color name="muted">#F1F5F9</color>
+    <color name="muted_foreground">#64748B</color>
     <color name="notification_action_color_filter">#ffffffff</color>
     <color name="notification_icon_bg_color">#ff9e9e9e</color>
+    <color name="popover">#FFFFFF</color>
+    <color name="popover_foreground">#030712</color>
     <color name="preference_fallback_accent_color">#ff008577</color>
+    <color name="primary">#18181B</color>
     <color name="primary_dark_material_dark">@android:color/black</color>
     <color name="primary_dark_material_light">@color/material_grey_600</color>
+    <color name="primary_foreground">#FAFAFA</color>
     <color name="primary_material_dark">@color/material_grey_900</color>
     <color name="primary_material_light">@color/material_grey_100</color>
     <color name="primary_text_default_material_dark">#ffffffff</color>
     <color name="primary_text_default_material_light">#de000000</color>
     <color name="primary_text_disabled_material_dark">#4Dffffff</color>
     <color name="primary_text_disabled_material_light">#39000000</color>
+    <color name="record_button_background">@color/white</color>
+    <color name="record_button_destructive">@color/destructive</color>
+    <color name="record_button_success">@color/colorSuccess</color>
+    <color name="record_button_text">@color/text_tertiary</color>
+    <color name="ring">#030712</color>
     <color name="ripple_material_dark">#33ffffff</color>
     <color name="ripple_material_light">#1f000000</color>
+    <color name="secondary">#F1F5F9</color>
+    <color name="secondary_foreground">#18181B</color>
     <color name="secondary_text_default_material_dark">#b3ffffff</color>
     <color name="secondary_text_default_material_light">#8a000000</color>
     <color name="secondary_text_disabled_material_dark">#36ffffff</color>
@@ -972,10 +1024,10 @@
     <color name="switch_thumb_disabled_material_light">#ffbdbdbd</color>
     <color name="switch_thumb_normal_material_dark">#ffbdbdbd</color>
     <color name="switch_thumb_normal_material_light">#fff1f1f1</color>
-    <color name="text_primary">#333333</color>
-    <color name="text_secondary">#555555</color>
-    <color name="text_success">#4CAF50</color>
-    <color name="text_tertiary">#888888</color>
+    <color name="text_primary">#212529</color>
+    <color name="text_secondary">#495057</color>
+    <color name="text_success">#20C997</color>
+    <color name="text_tertiary">#6C757D</color>
     <color name="tooltip_background_dark">#e6616161</color>
     <color name="tooltip_background_light">#e6FFFFFF</color>
     <color name="white">#FFFFFF</color>
@@ -6240,6 +6292,18 @@
     <item name="cornerFamily">rounded</item>
     <item name="cornerSize">4dp</item>
   </style>
+    <style name="ShapeAppearance.VoiceMemo.LargeComponent" parent="ShapeAppearance.MaterialComponents.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+    <style name="ShapeAppearance.VoiceMemo.MediumComponent" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+    <style name="ShapeAppearance.VoiceMemo.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
     <style name="ShapeAppearanceOverlay.Material3.Button" parent="">
     <item name="cornerSize">50%</item>
   </style>
@@ -6698,6 +6762,10 @@
         
         
         <item name="materialButtonStyle">@style/Widget.MaterialComponents.Button</item>
+        
+        
+        <item name="android:fontFamily">@font/figtree</item>
+        <item name="fontFamily">@font/figtree</item>
     </style>
     <style name="Theme.Design" parent="Theme.AppCompat">
   </style>
@@ -6857,6 +6925,39 @@
     <item name="windowActionBar">false</item>
     <item name="windowNoTitle">true</item>
   </style>
+    <style name="Theme.VoiceMemo" parent="Theme.MaterialComponents.Light.NoActionBar">
+        
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary</item>
+        <item name="colorOnPrimary">@color/primary_foreground</item>
+        
+        
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondaryVariant">@color/secondary</item>
+        <item name="colorOnSecondary">@color/secondary_foreground</item>
+        
+        
+        <item name="android:statusBarColor">@color/background</item>
+        <item name="android:windowLightStatusBar">true</item>
+        
+        
+        <item name="android:colorBackground">@color/background</item>
+        <item name="colorSurface">@color/card</item>
+        <item name="colorOnSurface">@color/card_foreground</item>
+        
+        
+        <item name="android:textColorPrimary">@color/foreground</item>
+        <item name="android:textColorSecondary">@color/muted_foreground</item>
+        
+        
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.VoiceMemo.SmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.VoiceMemo.MediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.VoiceMemo.LargeComponent</item>
+        
+        
+        <item name="android:fontFamily">@font/figtree</item>
+        <item name="fontFamily">@font/figtree</item>
+    </style>
     <style name="ThemeOverlay.AppCompat" parent="Base.ThemeOverlay.AppCompat"/>
     <style name="ThemeOverlay.AppCompat.ActionBar" parent="Base.ThemeOverlay.AppCompat.ActionBar"/>
     <style name="ThemeOverlay.AppCompat.Dark" parent="Base.ThemeOverlay.AppCompat.Dark"/>
@@ -9493,6 +9594,39 @@
   </style>
     <style name="Widget.Support.CoordinatorLayout" parent="android:Widget">
         <item name="statusBarBackground">#000000</item>
+    </style>
+    <style name="Widget.VoiceMemo.Button" parent="Widget.MaterialComponents.Button">
+        <item name="android:textColor">@color/primary_foreground</item>
+        <item name="backgroundTint">@color/primary</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:fontFamily">@font/figtree</item>
+        <item name="fontFamily">@font/figtree</item>
+    </style>
+    <style name="Widget.VoiceMemo.Button.IconOnly" parent="Widget.MaterialComponents.Button.UnelevatedButton">
+        <item name="iconTint">@color/foreground</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="android:fontFamily">@font/figtree</item>
+        <item name="fontFamily">@font/figtree</item>
+    </style>
+    <style name="Widget.VoiceMemo.Button.OutlinedButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textColor">@color/foreground</item>
+        <item name="strokeColor">@color/border</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:fontFamily">@font/figtree</item>
+        <item name="fontFamily">@font/figtree</item>
+    </style>
+    <style name="Widget.VoiceMemo.Button.TextButton" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/foreground</item>
+        <item name="rippleColor">@color/secondary</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:fontFamily">@font/figtree</item>
+        <item name="fontFamily">@font/figtree</item>
     </style>
     <declare-styleable name="ActionBar">
         

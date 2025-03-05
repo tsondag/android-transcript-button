@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/notification_expanded"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <ImageView
+            android:id="@+id/expanded_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_mic"
+            android:contentDescription="Microphone icon" />
+
+        <TextView
+            android:id="@+id/expanded_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Audio Recorder"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:layout_marginStart="8dp" />
+
+        <TextView
+            android:id="@+id/recording_timer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="#FF4081"
+            android:textSize="14sp"
+            android:visibility="gone"
+            android:layout_marginStart="8dp" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/expanded_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Control recording and floating button"
+        android:textColor="#666666"
+        android:textSize="14sp"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <!-- Record/Stop Button -->
+        <LinearLayout
+            android:id="@+id/record_action_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackground"
+            android:padding="8dp">
+
+            <ImageView
+                android:id="@+id/record_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@android:drawable/ic_btn_speak_now"
+                android:contentDescription="Record action" />
+
+            <TextView
+                android:id="@+id/record_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Record"
+                android:textSize="12sp"
+                android:textColor="#333333"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- Show/Hide Button -->
+        <LinearLayout
+            android:id="@+id/toggle_action_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackground"
+            android:padding="8dp">
+
+            <ImageView
+                android:id="@+id/toggle_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@android:drawable/ic_menu_view"
+                android:contentDescription="Toggle floating button" />
+
+            <TextView
+                android:id="@+id/toggle_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Show Button"
+                android:textSize="12sp"
+                android:textColor="#333333"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- Settings Button -->
+        <LinearLayout
+            android:id="@+id/settings_action_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackground"
+            android:padding="8dp">
+
+            <ImageView
+                android:id="@+id/settings_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@android:drawable/ic_menu_preferences"
+                android:contentDescription="Open settings" />
+
+            <TextView
+                android:id="@+id/settings_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Settings"
+                android:textSize="12sp"
+                android:textColor="#333333"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout> 

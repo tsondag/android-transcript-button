@@ -17,6 +17,7 @@ import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
+import android.widget.RemoteViews
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -47,6 +48,7 @@ import androidx.preference.PreferenceManager
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.view.WindowManager
 
 /**
  * A service that displays a draggable floating action button over other apps.
@@ -81,24 +83,46 @@ class FloatingButtonService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private var timerRunnable: Runnable? = null
 
+    private var notificationUpdateHandler: Handler? = null
+    private val notificationUpdateRunnable = object : Runnable {
+        override fun run() {
+            // Update the notification to ensure it stays fresh and visible
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.notify(NOTIFICATION_ID, createNotification())
+            
+            // Schedule the next update
+            notificationUpdateHandler?.postDelayed(this, NOTIFICATION_UPDATE_INTERVAL)
+        }
+    }
+
+    private var stopRecordingConfirmDialogShown = false
+    private var windowManager: WindowManager? = null
+    private var floatingButtonParams: WindowManager.LayoutParams? = null
+
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "Creating FloatingButtonService")
+        Log.d(TAG, "FloatingButtonService onCreate")
         
         try {
-            if (!checkOverlayPermission()) {
-                Log.e(TAG, "Overlay permission not granted, stopping service")
-                stopSelf()
-                return
-            }
-            Log.d(TAG, "Overlay permission check passed")
+            // Set initial values for UI components
+            windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
             
-            // Check if a button already exists
+            // Only create the button if it doesn't exist yet
             if (isButtonActive) {
                 Log.d(TAG, "Floating button already exists, not creating a new one")
             } else {
                 setupFloatingButton()
             }
+            
+            // Initialize notification update handler
+            notificationUpdateHandler = Handler(Looper.getMainLooper())
+            
+            // Create and display the persistent notification
+            startForeground(NOTIFICATION_ID, createNotification())
+            
+            // Force an immediate notification update to ensure custom view is displayed
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.notify(NOTIFICATION_ID, createNotification())
             
             Log.d(TAG, "Service initialization completed successfully")
         } catch (e: Exception) {
@@ -110,93 +134,186 @@ class FloatingButtonService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "FloatingButtonService onStartCommand")
         
-        // Handle keyboard/input field state updates
-        if (intent?.getBooleanExtra("KEYBOARD_INPUT_STATE_CHANGED", false) == true) {
-            try {
-                val shouldShow = intent.getBooleanExtra("SHOW_FLOATING_BUTTON", false)
-                val isAppMinimized = intent.getBooleanExtra("IS_APP_MINIMIZED", false)
-                Log.d(TAG, "Received keyboard/input field state update: shouldShow=$shouldShow, isRecording=$isRecording, isAppMinimized=$isAppMinimized")
+        try {
+            // Handle enable/disable actions
+            if (intent?.action == ACTION_ENABLE) {
+                Log.d(TAG, "Enabling floating button service")
+                SettingsFragment.setNotificationToggleEnabled(this, true)
                 
-                // Determine if we should show the button based on state and preferences
-                var shouldActuallyShow = shouldShow
+                // Update notification to reflect the new state
+                val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                val updatedNotification = createNotification()
+                notificationManager.notify(NOTIFICATION_ID, updatedNotification)
                 
-                // Apply smart button behavior if enabled (always show when recording)
-                if (SettingsFragment.isSmartButtonBehaviorEnabled(this)) {
-                    // Key logic: Button should show if (keyboard is active AND app is not minimized) OR we are recording
-                    shouldActuallyShow = (shouldShow && !isAppMinimized) || isRecording
-                    Log.d(TAG, "Smart button behavior enabled, adjusted shouldActuallyShow to: $shouldActuallyShow")
+                // Apply the visibility change immediately
+                updateButtonVisibilityBasedOnSettings()
+                
+                return START_STICKY
+            } else if (intent?.action == ACTION_DISABLE) {
+                Log.d(TAG, "Disabling floating button service")
+                SettingsFragment.setNotificationToggleEnabled(this, false)
+                
+                // Update notification to reflect the new state
+                val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                val updatedNotification = createNotification()
+                notificationManager.notify(NOTIFICATION_ID, updatedNotification)
+                
+                // Apply the visibility change immediately
+                updateButtonVisibilityBasedOnSettings()
+                
+                return START_STICKY
+            }
+            
+            // Check if this is a toggle button visibility command
+            if (intent?.action == ACTION_TOGGLE_BUTTON_VISIBILITY) {
+                Log.d(TAG, "Toggling button visibility from notification")
+                val currentState = SettingsFragment.isNotificationToggleEnabled(this)
+                val newState = !currentState
+                SettingsFragment.setNotificationToggleEnabled(this, newState)
+                
+                // Update notification to reflect the new state
+                val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                val updatedNotification = createNotification()
+                notificationManager.notify(NOTIFICATION_ID, updatedNotification)
+                
+                // Apply the visibility change immediately if appropriate
+                updateButtonVisibilityBasedOnSettings()
+                
+                return START_STICKY
+            }
+            
+            // Handle toggle recording action from notification
+            if (intent?.action == ACTION_TOGGLE_RECORDING) {
+                Log.d(TAG, "Toggling recording from notification")
+                
+                // Check for audio permission first
+                if (!checkAudioPermission()) {
+                    Log.e(TAG, "Audio permission not granted")
+                    
+                    // Create an intent to request audio permission
+                    val permissionIntent = Intent(this, MainActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        putExtra("REQUEST_AUDIO_PERMISSION", true)
+                    }
+                    startActivity(permissionIntent)
+                    return START_STICKY
                 }
                 
-                // Since keyboard-only mode is now always enabled and integrated into Smart Button Behavior
-                Log.d(TAG, "Smart button mode active: $isButtonActive, should show: $shouldActuallyShow")
-                
-                // Force immediate hiding on minimization for better responsiveness
-                val forceImmediateHide = isAppMinimized && 
-                                       SettingsFragment.isSmartButtonBehaviorEnabled(this) && 
-                                       !isRecording
-                
-                if (shouldActuallyShow) {
-                    if (!isButtonActive) {
-                        // Setup the button - this will restore its last position from SharedPreferences
-                        setupFloatingButton()
-                        // Button is shown during setup
-                        Log.d(TAG, "Showing floating button")
-                    }
+                // Toggle recording state
+                if (isRecording) {
+                    stopRecording()
                 } else {
-                    if (isButtonActive) {
-                        // Handle immediate removal
-                        if (forceImmediateHide) {
-                            removeFloatingButton()
-                            Log.d(TAG, "Immediately removing floating button due to minimization")
-                        } else {
-                            // Just remove the button
-                            removeFloatingButton()
-                            Log.d(TAG, "Hiding floating button")
+                    startRecording()
+                }
+                isRecording = !isRecording
+                
+                // Update UI based on recording state
+                updateFloatingButton()
+                
+                // Update notification to reflect the new state
+                val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                val updatedNotification = createNotification()
+                notificationManager.notify(NOTIFICATION_ID, updatedNotification)
+                
+                return START_STICKY
+            }
+            
+            // Start periodic notification updates if not already started
+            startNotificationUpdates()
+
+            // Handle keyboard/input field state updates
+            if (intent?.getBooleanExtra("KEYBOARD_INPUT_STATE_CHANGED", false) == true) {
+                try {
+                    val shouldShow = intent.getBooleanExtra("SHOW_FLOATING_BUTTON", false)
+                    val isAppMinimized = intent.getBooleanExtra("IS_APP_MINIMIZED", false)
+                    Log.d(TAG, "Received keyboard/input field state update: shouldShow=$shouldShow, isRecording=$isRecording, isAppMinimized=$isAppMinimized")
+                    
+                    // Determine if we should show the button based on state and preferences
+                    var shouldActuallyShow = shouldShow
+                    
+                    // First check if the notification toggle is enabled, if not, we never show the button
+                    // unless we're recording (for UI clarity)
+                    if (!SettingsFragment.isNotificationToggleEnabled(this) && !isRecording) {
+                        shouldActuallyShow = false
+                        Log.d(TAG, "Button visibility disabled via notification toggle")
+                    } 
+                    // Apply smart button behavior if enabled (always show when recording)
+                    else if (SettingsFragment.isSmartButtonBehaviorEnabled(this)) {
+                        // Key logic: Button should show if (keyboard is active AND app is not minimized) OR we are recording
+                        shouldActuallyShow = (shouldShow && !isAppMinimized) || isRecording
+                        Log.d(TAG, "Smart button behavior enabled, adjusted shouldActuallyShow to: $shouldActuallyShow")
+                    }
+                    
+                    // Since keyboard-only mode is now always enabled and integrated into Smart Button Behavior
+                    Log.d(TAG, "Smart button mode active: $isButtonActive, should show: $shouldActuallyShow")
+                    
+                    // Force immediate hiding on minimization for better responsiveness
+                    val forceImmediateHide = isAppMinimized && 
+                                           SettingsFragment.isSmartButtonBehaviorEnabled(this) && 
+                                           !isRecording
+                    
+                    if (shouldActuallyShow) {
+                        if (!isButtonActive) {
+                            // Setup the button - this will restore its last position from SharedPreferences
+                            setupFloatingButton()
+                            // Button is shown during setup
+                            Log.d(TAG, "Showing floating button")
+                        }
+                    } else {
+                        if (isButtonActive) {
+                            // Handle immediate removal
+                            if (forceImmediateHide) {
+                                removeFloatingButton()
+                                Log.d(TAG, "Immediately removing floating button due to minimization")
+                            } else {
+                                // Just remove the button
+                                removeFloatingButton()
+                                Log.d(TAG, "Hiding floating button")
+                            }
                         }
                     }
+                } catch (e: Exception) {
+                    // Catch and log any exceptions to prevent service crashes
+                    Log.e(TAG, "Error handling keyboard visibility change", e)
+                }
+                
+                return START_STICKY
+            }
+            
+            // Regular service start handling continues
+            if (!checkOverlayPermission()) {
+                Log.e(TAG, "Overlay permission not granted")
+                stopSelf()
+                return START_NOT_STICKY
+            }
+
+            try {
+                // Check if a button already exists
+                if (isButtonActive) {
+                    Log.d(TAG, "Floating button already exists, not creating a new one")
+                } else {
+                    setupFloatingButton()
+                }
+                
+                // Create a notification first before trying to start foreground
+                try {
+                    // Use full custom notification right away instead of simple one
+                    val notification = createNotification()
+                    startForeground(NOTIFICATION_ID, notification)
+                    Log.d(TAG, "Started service with custom notification")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error starting foreground service", e)
+                    stopSelf()
+                    return START_NOT_STICKY
                 }
             } catch (e: Exception) {
-                // Catch and log any exceptions to prevent service crashes
-                Log.e(TAG, "Error handling keyboard visibility change", e)
-            }
-            
-            return START_STICKY
-        }
-        
-        // Regular service start handling continues
-        if (!checkOverlayPermission()) {
-            Log.e(TAG, "Overlay permission not granted")
-            stopSelf()
-            return START_NOT_STICKY
-        }
-
-        try {
-            // Check if a button already exists
-            if (isButtonActive) {
-                Log.d(TAG, "Floating button already exists, not creating a new one")
-            } else {
-                setupFloatingButton()
-            }
-            
-            // Check if we should use notification (optional)
-            val useNotification = intent?.getBooleanExtra("use_notification", true) ?: true
-            
-            if (useNotification) {
-                startForeground(NOTIFICATION_ID, createNotification())
-                Log.d(TAG, "Started service with notification")
-            } else {
-                // For Android 12+ we still need a notification, but we can make it silent
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    val silentNotification = createSilentNotification()
-                    startForeground(NOTIFICATION_ID, silentNotification)
-                    Log.d(TAG, "Started service with silent notification (Android 12+)")
-                } else {
-                    // For older versions, we can run without a notification
-                    Log.d(TAG, "Started service without notification")
-                }
+                Log.e(TAG, "Error creating floating button or notification", e)
+                stopSelf()
+                return START_NOT_STICKY
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error creating floating button", e)
+            Log.e(TAG, "Critical error in onStartCommand", e)
             stopSelf()
             return START_NOT_STICKY
         }
@@ -206,24 +323,25 @@ class FloatingButtonService : Service() {
 
     private fun setupFloatingButton() {
         try {
-            Log.d(TAG, "Creating enhanced floating button")
-            
-            // Create and show the floating button
+            // Create a new floating button
             floatingButton = EnhancedFloatingButton(
                 context = this,
                 onButtonClick = {
-                    toggleRecording()
+                    if (!isRecording) {
+                        startRecording()
+                    } else {
+                        stopRecording()
+                    }
                 }
             )
             
             floatingButton?.show()
-            isButtonActive = true
             
-            Log.d(TAG, "Enhanced floating button successfully added to window manager")
+            // Update our tracking flag
+            isButtonActive = true
+            Log.d(TAG, "Floating button created and shown")
         } catch (e: Exception) {
-            Log.e(TAG, "Error creating enhanced floating button", e)
-            isButtonActive = false
-            stopSelf()
+            Log.e(TAG, "Error creating floating button", e)
         }
     }
 
@@ -321,7 +439,7 @@ class FloatingButtonService : Service() {
     }
 
     private fun stopRecording() {
-        try {
+            try {
             // Update button state immediately to show stopping state
             floatingButton?.updateState(EnhancedFloatingButton.RecordingState.STOPPING)
             
@@ -544,35 +662,97 @@ class FloatingButtonService : Service() {
         
         // Remove the floating button
         removeFloatingButton()
+
+        // Remove notification update callbacks
+        notificationUpdateHandler?.removeCallbacks(notificationUpdateRunnable)
+        notificationUpdateHandler = null
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun createNotification(): Notification {
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Audio Recorder")
-            .setContentText("Recording service is active")
-            .setSmallIcon(android.R.drawable.ic_btn_speak_now)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
-            .build()
-    }
-
-    private fun createSilentNotification(): Notification {
-        // Create a silent version of the notification for when notification permission is not granted
-        val notificationIntent = Intent(this, VoiceMemoActivity::class.java)
+        // Create an intent for the notification to open the main activity when clicked
+        val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             this, 0, notificationIntent,
             PendingIntent.FLAG_IMMUTABLE
         )
-
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Voice Recorder")
-            .setContentText("Recording service is running")
+        
+        // Create toggle intent
+        val toggleIntent = Intent(this, FloatingButtonService::class.java).apply {
+            action = ACTION_TOGGLE_BUTTON_VISIBILITY
+        }
+        val togglePendingIntent = PendingIntent.getService(
+            this,
+            0,
+            toggleIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        // Create intent to view memos
+        val memosIntent = Intent(this, VoiceMemoActivity::class.java)
+        val memosPendingIntent = PendingIntent.getActivity(
+            this, 0, memosIntent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        // Determine button states and labels based on the microphone state
+        val isMicEnabled = SettingsFragment.isNotificationToggleEnabled(this)
+        val toggleActionTitle = if (isMicEnabled) "Hide Button" else "Show Button"
+        
+        // Build the notification with standard actions
+        return NotificationCompat.Builder(this, AudioRecorderApp.CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_mic)
+            .setContentTitle("Audio Recorder")
+            .setContentText(if (isRecording) "Recording in progress..." else "Service is running")
             .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_MIN) // Minimum priority
-            .setSilent(true) // Make it silent
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setOngoing(true)
+            .addAction(
+                android.R.drawable.ic_menu_view,
+                toggleActionTitle,
+                togglePendingIntent
+            )
+            .addAction(
+                android.R.drawable.ic_menu_recent_history,
+                "View Memos",
+                memosPendingIntent
+            )
+            .build()
+    }
+
+    private fun createSilentNotification(): Notification {
+        // Create a basic low-priority silent notification
+        val notificationIntent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, notificationIntent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        return NotificationCompat.Builder(this, AudioRecorderApp.CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_mic)
+            .setContentTitle("Audio Recorder")
+            .setContentText("Service is running")
+            .setContentIntent(pendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setSilent(true)
+            .build()
+    }
+
+    private fun createSimpleNotification(): Notification {
+        // Create a basic notification with minimal features
+        val notificationIntent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            this, 0, notificationIntent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        return NotificationCompat.Builder(this, AudioRecorderApp.CHANNEL_ID)
+            .setContentTitle("Audio Recorder")
+            .setContentText("Service is running")
+            .setSmallIcon(R.drawable.ic_mic)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setContentIntent(pendingIntent)
             .build()
     }
 
@@ -689,13 +869,56 @@ class FloatingButtonService : Service() {
         }
     }
 
+    /**
+     * Updates button visibility based on notification toggle and other settings
+     */
+    private fun updateButtonVisibilityBasedOnSettings() {
+        val isEnabled = SettingsFragment.isNotificationToggleEnabled(this)
+        
+        if (isEnabled && !isButtonActive) {
+            // If button isn't active but should be (toggle on)
+            setupFloatingButton()
+            Log.d(TAG, "Setting up floating button because toggle is enabled")
+        } else if (!isEnabled && isButtonActive) {
+            // If button is active but shouldn't be (toggle off)
+            removeFloatingButton()
+            Log.d(TAG, "Removing floating button because toggle is disabled")
+        } else if (isEnabled && isRecording && !isButtonActive) {
+            // If button isn't active but should be (toggle on + recording)
+            setupFloatingButton()
+            Log.d(TAG, "Setting up floating button because toggle is enabled and recording is active")
+        }
+        
+        // Update notification to reflect the current state
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(NOTIFICATION_ID, createNotification())
+    }
+
+    private fun startNotificationUpdates() {
+        // Cancel any existing updates
+        notificationUpdateHandler?.removeCallbacks(notificationUpdateRunnable)
+        
+        // Start periodic updates
+        notificationUpdateHandler?.postDelayed(notificationUpdateRunnable, NOTIFICATION_UPDATE_INTERVAL)
+    }
+
     companion object {
-        private const val TAG = "AudioRecorder"
+        private const val TAG = "FloatingButtonService"
         private const val NOTIFICATION_ID = 1
-        private const val TRANSCRIPT_NOTIFICATION_ID = 2
+        private const val CHANNEL_ID = "AudioRecorderChannel"
+        
+        // Action constants
+        const val ACTION_TOGGLE_BUTTON_VISIBILITY = "com.example.audiorecorder.TOGGLE_BUTTON_VISIBILITY"
+        const val ACTION_TOGGLE_RECORDING = "com.example.audiorecorder.TOGGLE_RECORDING"
+        const val ACTION_OPEN_SETTINGS = "com.example.audiorecorder.OPEN_SETTINGS"
+        const val ACTION_ENABLE = "com.example.audiorecorder.ENABLE"
+        const val ACTION_DISABLE = "com.example.audiorecorder.DISABLE"
         
         // Static flag to track if a button is already active
         @Volatile
         private var isButtonActive = false
+
+        // Update notification more frequently (every 5 seconds during recording, otherwise every 15 minutes)
+        private const val NOTIFICATION_UPDATE_INTERVAL = 15 * 60 * 1000L // 15 minutes in milliseconds
     }
 } 

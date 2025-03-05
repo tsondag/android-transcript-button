@@ -21,5 +21,97 @@
         
         <!-- Button styles -->
         <item name="materialButtonStyle">@style/Widget.MaterialComponents.Button</item>
+        
+        <!-- Font family -->
+        <item name="android:fontFamily">@font/figtree</item>
+        <item name="fontFamily">@font/figtree</item>
+    </style>
+
+    <style name="Theme.VoiceMemo" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary</item>
+        <item name="colorOnPrimary">@color/primary_foreground</item>
+        
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondaryVariant">@color/secondary</item>
+        <item name="colorOnSecondary">@color/secondary_foreground</item>
+        
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">@color/background</item>
+        <item name="android:windowLightStatusBar">true</item>
+        
+        <!-- Background colors -->
+        <item name="android:colorBackground">@color/background</item>
+        <item name="colorSurface">@color/card</item>
+        <item name="colorOnSurface">@color/card_foreground</item>
+        
+        <!-- Text colors -->
+        <item name="android:textColorPrimary">@color/foreground</item>
+        <item name="android:textColorSecondary">@color/muted_foreground</item>
+        
+        <!-- Shape and corner radius -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.VoiceMemo.SmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.VoiceMemo.MediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.VoiceMemo.LargeComponent</item>
+        
+        <!-- Font family -->
+        <item name="android:fontFamily">@font/figtree</item>
+        <item name="fontFamily">@font/figtree</item>
+    </style>
+    
+    <!-- Shape Appearances -->
+    <style name="ShapeAppearance.VoiceMemo.SmallComponent" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+    
+    <style name="ShapeAppearance.VoiceMemo.MediumComponent" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+    
+    <style name="ShapeAppearance.VoiceMemo.LargeComponent" parent="ShapeAppearance.MaterialComponents.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+    
+    <!-- Custom Button Styles -->
+    <style name="Widget.VoiceMemo.Button" parent="Widget.MaterialComponents.Button">
+        <item name="android:textColor">@color/primary_foreground</item>
+        <item name="backgroundTint">@color/primary</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:fontFamily">@font/figtree</item>
+        <item name="fontFamily">@font/figtree</item>
+    </style>
+    
+    <style name="Widget.VoiceMemo.Button.OutlinedButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textColor">@color/foreground</item>
+        <item name="strokeColor">@color/border</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:fontFamily">@font/figtree</item>
+        <item name="fontFamily">@font/figtree</item>
+    </style>
+    
+    <style name="Widget.VoiceMemo.Button.TextButton" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/foreground</item>
+        <item name="rippleColor">@color/secondary</item>
+        <item name="cornerRadius">8dp</item>
+        <item name="android:fontFamily">@font/figtree</item>
+        <item name="fontFamily">@font/figtree</item>
+    </style>
+    
+    <style name="Widget.VoiceMemo.Button.IconOnly" parent="Widget.MaterialComponents.Button.UnelevatedButton">
+        <item name="iconTint">@color/foreground</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="android:fontFamily">@font/figtree</item>
+        <item name="fontFamily">@font/figtree</item>
     </style>
 </resources> 

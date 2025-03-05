@@ -15,14 +15,17 @@ import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.ViewModelProvider
 import com.example.audiorecorder.R
 import com.example.audiorecorder.utils.AudioPlaybackManager
+import com.example.audiorecorder.utils.ClipboardUtils
 import com.example.audiorecorder.utils.Logger
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.button.MaterialButton
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.widget.PopupMenu
 
 /**
  * A bottom sheet dialog fragment for editing voice memo transcripts.
@@ -36,13 +39,12 @@ class VoiceMemoEditorBottomSheet : BottomSheetDialogFragment(), AudioPlaybackMan
     // UI Components
     private lateinit var dateTimeText: TextView
     private lateinit var durationText: TextView
-    private lateinit var playButton: ImageButton
+    private lateinit var playButton: MaterialButton
     private lateinit var transcriptEditText: EditText
-    private lateinit var shareButton: ImageButton
-    private lateinit var printButton: ImageButton
-    private lateinit var deleteButton: ImageButton
-    private lateinit var saveButton: View
-    private lateinit var cancelButton: View
+    private lateinit var shareButton: MaterialButton
+    private lateinit var copyButton: MaterialButton
+    private lateinit var closeButton: MaterialButton
+    private lateinit var moreOptionsButton: MaterialButton
     
     // Callback for handling actions
     interface EditCallback {
@@ -133,10 +135,9 @@ class VoiceMemoEditorBottomSheet : BottomSheetDialogFragment(), AudioPlaybackMan
         playButton = view.findViewById(R.id.playButton)
         transcriptEditText = view.findViewById(R.id.transcriptEditText)
         shareButton = view.findViewById(R.id.shareButton)
-        printButton = view.findViewById(R.id.printButton)
-        deleteButton = view.findViewById(R.id.deleteButton)
-        saveButton = view.findViewById(R.id.saveButton)
-        cancelButton = view.findViewById(R.id.cancelButton)
+        copyButton = view.findViewById(R.id.copyButton)
+        closeButton = view.findViewById(R.id.closeButton)
+        moreOptionsButton = view.findViewById(R.id.moreOptionsButton)
         
         // Populate UI with transcript data
         populateUI()
@@ -163,41 +164,26 @@ class VoiceMemoEditorBottomSheet : BottomSheetDialogFragment(), AudioPlaybackMan
     }
     
     private fun setupClickListeners() {
-        // Play button
+        // Set up click listeners for buttons
         playButton.setOnClickListener {
             toggleAudioPlayback()
         }
         
-        // Share button
         shareButton.setOnClickListener {
             callback?.onTranscriptShared(transcript)
+        }
+        
+        copyButton.setOnClickListener {
+            val text = transcriptEditText.text.toString()
+            ClipboardUtils.copyToClipboard(requireContext(), text, "Transcript", true)
+        }
+        
+        closeButton.setOnClickListener {
             dismiss()
         }
         
-        // Print button
-        printButton.setOnClickListener {
-            callback?.onTranscriptPrint(transcript)
-            dismiss()
-        }
-        
-        // Delete button
-        deleteButton.setOnClickListener {
-            showDeleteConfirmationDialog()
-        }
-        
-        // Save button
-        saveButton.setOnClickListener {
-            saveTranscript()
-        }
-        
-        // Cancel button
-        cancelButton.setOnClickListener {
-            // Check if text was modified
-            if (transcript.transcript != transcriptEditText.text.toString()) {
-                showDiscardChangesDialog()
-            } else {
-                dismiss()
-            }
+        moreOptionsButton.setOnClickListener {
+            showMoreOptionsMenu(it)
         }
     }
     
@@ -237,8 +223,8 @@ class VoiceMemoEditorBottomSheet : BottomSheetDialogFragment(), AudioPlaybackMan
     }
     
     private fun updatePlayButton(isPlaying: Boolean) {
-        playButton.setImageResource(
-            if (isPlaying) R.drawable.ic_stop else R.drawable.ic_play
+        playButton.setIconResource(
+            if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play
         )
         playButton.contentDescription = 
             if (isPlaying) "Stop" else "Play"
@@ -246,28 +232,28 @@ class VoiceMemoEditorBottomSheet : BottomSheetDialogFragment(), AudioPlaybackMan
     
     // AudioPlaybackManager.PlaybackCallback implementations
     override fun onPlaybackStarted(file: File) {
-        requireActivity().runOnUiThread {
+        activity?.runOnUiThread {
             Logger.ui("Editor: Playback started: ${file.name}")
             updatePlayButton(true)
         }
     }
     
     override fun onPlaybackStopped(file: File) {
-        requireActivity().runOnUiThread {
+        activity?.runOnUiThread {
             Logger.ui("Editor: Playback stopped: ${file.name}")
             updatePlayButton(false)
         }
     }
     
     override fun onPlaybackCompleted(file: File) {
-        requireActivity().runOnUiThread {
+        activity?.runOnUiThread {
             Logger.ui("Editor: Playback completed: ${file.name}")
             updatePlayButton(false)
         }
     }
     
     override fun onPlaybackError(file: File, error: String) {
-        requireActivity().runOnUiThread {
+        activity?.runOnUiThread {
             Logger.ui("Editor: Playback error for ${file.name}: $error")
             updatePlayButton(false)
             Toast.makeText(requireContext(), "Error playing audio", Toast.LENGTH_SHORT).show()
@@ -295,5 +281,30 @@ class VoiceMemoEditorBottomSheet : BottomSheetDialogFragment(), AudioPlaybackMan
     override fun onDestroy() {
         audioPlaybackManager.release()
         super.onDestroy()
+    }
+    
+    private fun showMoreOptionsMenu(view: View) {
+        val popupMenu = PopupMenu(requireContext(), view)
+        popupMenu.inflate(R.menu.memo_editor_menu)
+        
+        popupMenu.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.action_print -> {
+                    callback?.onTranscriptPrint(transcript)
+                    true
+                }
+                R.id.action_delete -> {
+                    showDeleteConfirmationDialog()
+                    true
+                }
+                R.id.action_save -> {
+                    saveTranscript()
+                    true
+                }
+                else -> false
+            }
+        }
+        
+        popupMenu.show()
     }
 } 

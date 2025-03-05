@@ -3,6 +3,7 @@ package com.example.audiorecorder
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.Notification
 import android.content.Context
 import android.os.Build
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -44,9 +45,13 @@ class AudioRecorderApp : Application() {
             val serviceChannel = NotificationChannel(
                 CHANNEL_ID,
                 "Audio Recorder Service",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_HIGH  // Use HIGH importance to ensure buttons are visible
             ).apply {
                 description = "Notification channel for Audio Recorder service"
+                setShowBadge(false)  // Don't show badge for service notifications
+                enableLights(false)  // No notification light needed
+                enableVibration(false) // No vibration needed
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC // Show on lockscreen
             }
             
             // Transcript notification channel
