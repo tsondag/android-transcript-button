@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="auto_delete_periods">
+        <item>1 hour</item>
+        <item>4 hours</item>
+        <item>1 day</item>
+        <item>1 week</item>
+        <item>1 month</item>
+        <item>6 months</item>
+        <item>1 year</item>
+    </string-array>
+</resources> 

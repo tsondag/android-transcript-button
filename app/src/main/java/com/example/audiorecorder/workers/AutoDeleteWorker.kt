@@ -118,10 +118,6 @@ class AutoDeleteWorker(
                 calendar.add(Calendar.MONTH, -1)
                 calendar.timeInMillis
             }
-            "3 months" -> {
-                calendar.add(Calendar.MONTH, -3)
-                calendar.timeInMillis
-            }
             "6 months" -> {
                 calendar.add(Calendar.MONTH, -6)
                 calendar.timeInMillis
@@ -130,7 +126,12 @@ class AutoDeleteWorker(
                 calendar.add(Calendar.YEAR, -1)
                 calendar.timeInMillis
             }
-            else -> null
+            else -> {
+                // Default to 1 day if the period is unrecognized
+                Log.w(TAG, "Unrecognized auto-delete period: $period, defaulting to 1 day")
+                calendar.add(Calendar.DAY_OF_YEAR, -1)
+                calendar.timeInMillis
+            }
         }
     }
 } 

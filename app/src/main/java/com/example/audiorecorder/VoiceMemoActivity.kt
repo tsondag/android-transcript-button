@@ -127,25 +127,11 @@ class VoiceMemoActivity : AppCompatActivity(), AudioPlaybackManager.PlaybackCall
         recyclerView.layoutManager = LinearLayoutManager(this)
         
         adapter = VoiceMemoAdapter(
-            onItemClick = { transcript ->
-                Logger.ui("Transcript clicked: ${transcript.file.name}")
-                handleTranscriptClick(transcript)
-            },
-            onCopyClick = { transcript ->
-                Logger.ui("Copy button clicked for: ${transcript.file.name}")
-                transcript.transcript?.let { text ->
-                    ClipboardUtils.copyToClipboard(this, text, "Transcript", true)
-                }
-            },
-            onMenuClick = { transcript, view ->
-                Logger.ui("Menu button clicked for: ${transcript.file.name}")
-                // Handle menu item click based on which item was clicked
-                handleMenuItemClick(transcript, view)
-            },
-            onPlayClick = { transcript ->
-                Logger.ui("Play button clicked for: ${transcript.file.name}")
-                toggleAudioPlayback(transcript)
-            }
+            onItemClick = this::handleTranscriptClick,
+            onCopyClick = this::copyTranscriptToClipboard,
+            onMenuClick = this::handleMenuItemClick,
+            onPlayClick = this::toggleAudioPlayback,
+            onRetryClick = this::retryTranscription
         )
         
         recyclerView.adapter = adapter
@@ -473,5 +459,24 @@ class VoiceMemoActivity : AppCompatActivity(), AudioPlaybackManager.PlaybackCall
     private fun hasRequiredPermissions(): Boolean {
         // Implement the logic to check if the necessary permissions are granted
         return true // Placeholder, actual implementation needed
+    }
+
+    /**
+     * Retry transcription for a failed item
+     */
+    private fun retryTranscription(transcript: TranscriptItem) {
+        Logger.ui("Retrying transcription for: ${transcript.file.name}")
+        viewModel.retryTranscription(transcript)
+        Toast.makeText(this, "Retrying transcription...", Toast.LENGTH_SHORT).show()
+    }
+
+    /**
+     * Copy transcript text to clipboard
+     */
+    private fun copyTranscriptToClipboard(transcript: TranscriptItem) {
+        Logger.ui("Copy button clicked for: ${transcript.file.name}")
+        transcript.transcript?.let { text ->
+            ClipboardUtils.copyToClipboard(this, text, "Transcript", true)
+        }
     }
 } 

@@ -4,16 +4,16 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Spinner
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.example.audiorecorder.databinding.FragmentSettingsBinding
@@ -46,6 +46,7 @@ class SettingsFragment : Fragment() {
         const val PREF_SMART_BUTTON_BEHAVIOR = "smart_button_behavior"
         const val PREF_TAG_AUDIO_EVENTS_ENABLED = "tag_audio_events_enabled"
         const val PREF_NOTIFICATION_TOGGLE_ENABLED = "notification_toggle_enabled"
+        const val PREF_ONLY_SHOW_ON_INPUT = "only_show_on_input"
         
         /**
          * Check if auto-detect language is enabled in settings
@@ -119,26 +120,6 @@ class SettingsFragment : Fragment() {
         }
     }
 
-    private val requestAudioPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        Logger.ui("Audio permission result: $isGranted")
-        updateAudioPermissionButton()
-        if (!isGranted) {
-            Toast.makeText(requireContext(), "Audio permission is required for recording", Toast.LENGTH_LONG).show()
-        }
-    }
-
-    private val requestNotificationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        Logger.ui("Notification permission result: $isGranted")
-        updateNotificationPermissionButton()
-        if (isGranted && Settings.canDrawOverlays(requireContext())) {
-            startFloatingButtonService()
-        }
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -161,114 +142,56 @@ class SettingsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         Logger.ui("Setting up SettingsFragment")
 
-        setupAudioPermissionButton()
-        setupOverlayPermissionButton()
-        setupNotificationPermissionButton()
-        setupFloatingButtonToggle()
+        // Set up permissions section
+        setupPermissionsSection()
+        
+        // Set up account section
+        setupAccountSection()
+        
+        // Set up features section
         setupAutoCopySwitch()
         setupAutoInsertSwitch()
-        setupAutoTranslateSwitch()
-        setupLanguageSpinner()
-        setupAutoDetectLanguageSwitch()
+        setupOnlyShowOnInputSwitch()
         setupAutoDeleteSwitch()
-        setupAutoDeletePeriodSpinner()
         setupTagAudioEventsSwitch()
-
-        // Set up smart button behavior switch
-        binding.switchSmartButtonBehavior.isChecked = prefs.getBoolean(PREF_SMART_BUTTON_BEHAVIOR, true)
-        binding.switchSmartButtonBehavior.setOnCheckedChangeListener { _, isChecked ->
-            prefs.edit().putBoolean(PREF_SMART_BUTTON_BEHAVIOR, isChecked).apply()
-            Logger.ui("Smart button behavior toggled: $isChecked")
-            
-            // Update the floating button service if it's running
-            if (isFloatingButtonVisible) {
-                val intent = Intent(requireContext(), FloatingButtonService::class.java)
-                requireContext().startService(intent)
-            }
-        }
-
-        // Restore floating button state if it was visible
-        if (isFloatingButtonVisible && hasRequiredPermissions()) {
-            startFloatingButtonService()
-        }
-    }
-
-    private fun setupAudioPermissionButton() {
-        binding.audioPermissionButton.setOnClickListener {
-            Logger.ui("Audio permission button clicked")
-            requestAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-        }
-        updateAudioPermissionButton()
-    }
-
-    private fun updateAudioPermissionButton() {
-        val hasPermission = requireContext().checkSelfPermission(Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
         
-        // Show/hide the appropriate views
-        binding.audioPermissionStatus.visibility = if (hasPermission) View.VISIBLE else View.GONE
-        binding.audioPermissionButton.visibility = if (hasPermission) View.GONE else View.VISIBLE
-        
-        Logger.ui("Audio permission status updated: $hasPermission")
+        // Set up about section
+        setupAboutSection()
     }
 
-    private fun setupOverlayPermissionButton() {
-        binding.overlayPermissionButton.setOnClickListener {
-            Logger.ui("Overlay permission button clicked")
-            val intent = Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:${requireContext().packageName}")
-            )
-            startActivity(intent)
-        }
-        updateOverlayPermissionButton()
-    }
-
-    private fun updateOverlayPermissionButton() {
-        val hasPermission = Settings.canDrawOverlays(requireContext())
+    private fun setupPermissionsSection() {
+        // Check if all required permissions are granted
+        val hasAudioPermission = requireContext().checkSelfPermission(Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        val hasOverlayPermission = Settings.canDrawOverlays(requireContext())
         
-        // Show/hide the appropriate views
-        binding.overlayPermissionStatus.visibility = if (hasPermission) View.VISIBLE else View.GONE
-        binding.overlayPermissionButton.visibility = if (hasPermission) View.GONE else View.VISIBLE
-        
-        Logger.ui("Overlay permission status updated: $hasPermission")
-    }
-
-    private fun setupNotificationPermissionButton() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            binding.notificationPermissionCard.visibility = View.VISIBLE
-            binding.notificationPermissionButton.setOnClickListener {
-                Logger.ui("Notification permission button clicked")
-                requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-            updateNotificationPermissionButton()
-            
-            // Update the description to indicate it's optional
-            binding.notificationPermissionDescription.text = "Optional for recording service notification"
+        // Update the permission status
+        if (hasAudioPermission && hasOverlayPermission) {
+            binding.permissionStatusIcon.setImageResource(R.drawable.ic_check)
+            binding.permissionStatusText.text = "All required permissions granted"
+            binding.permissionStatusText.setTextColor(resources.getColor(R.color.text_success, null))
         } else {
-            binding.notificationPermissionCard.visibility = View.GONE
+            binding.permissionStatusIcon.setImageResource(R.drawable.ic_alert_circle)
+            binding.permissionStatusText.text = "Not all required permissions granted"
+            binding.permissionStatusText.setTextColor(resources.getColor(R.color.colorDanger, null))
+        }
+        
+        // Set up click listener for the permissions row
+        binding.permissionsRow.setOnClickListener {
+            // Navigate to the permissions fragment
+            requireActivity().supportFragmentManager.beginTransaction()
+                .replace(R.id.settings_container, PermissionsFragment())
+                .addToBackStack(null)
+                .commit()
         }
     }
-
-    private fun updateNotificationPermissionButton() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val hasPermission = requireContext().checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED
-            
-            // Show/hide the appropriate views
-            binding.notificationPermissionStatus.visibility = if (hasPermission) View.VISIBLE else View.GONE
-            binding.notificationPermissionButton.visibility = if (hasPermission) View.GONE else View.VISIBLE
-            
-            Logger.ui("Notification permission status updated: $hasPermission")
-        }
+    
+    private fun setupAccountSection() {
+        // For demo purposes, we'll just set some placeholder values
+        binding.nameValue.text = "John Doe"
+        binding.emailValue.text = "john.doe@example.com"
+        binding.planValue.text = "Premium"
     }
-
-    private fun setupFloatingButtonToggle() {
-        binding.toggleFloatingButton.setOnClickListener {
-            Logger.ui("Toggle floating button clicked")
-            toggleFloatingButton()
-        }
-        updateFloatingButtonToggle()
-    }
-
+    
     private fun setupAutoCopySwitch() {
         binding.autoCopySwitch.isChecked = isAutoCopyEnabled
         binding.autoCopySwitch.setOnCheckedChangeListener { _, isChecked ->
@@ -289,19 +212,6 @@ class SettingsFragment : Fragment() {
     private fun setupAutoInsertSwitch() {
         binding.autoInsertSwitch.isChecked = isAutoInsertEnabled
         
-        // Update accessibility service status text
-        updateAccessibilityServiceStatus()
-        
-        // Update the description to indicate it's optional
-        binding.accessibilityPermissionDescription.text = "Optional for auto-inserting text into input fields"
-        
-        // Setup accessibility settings button
-        binding.accessibilitySettingsButton.setOnClickListener {
-            Logger.ui("Accessibility settings button clicked")
-            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-            startActivity(intent)
-        }
-        
         // Setup auto-insert switch
         binding.autoInsertSwitch.setOnCheckedChangeListener { _, isChecked ->
             Logger.ui("Auto-insert switch toggled: $isChecked")
@@ -316,6 +226,13 @@ class SettingsFragment : Fragment() {
                 
                 // Reset the switch
                 binding.autoInsertSwitch.isChecked = false
+                
+                // Navigate to the permissions fragment
+                requireActivity().supportFragmentManager.beginTransaction()
+                    .replace(R.id.settings_container, PermissionsFragment())
+                    .addToBackStack(null)
+                    .commit()
+                
                 return@setOnCheckedChangeListener
             }
             
@@ -331,95 +248,60 @@ class SettingsFragment : Fragment() {
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
         }
     }
-
-    private fun setupAutoTranslateSwitch() {
-        binding.autoTranslateSwitch.isChecked = isAutoTranslateEnabled
-        binding.autoTranslateSwitch.setOnCheckedChangeListener { _, isChecked ->
-            Logger.ui("Auto-translate switch toggled: $isChecked")
-            isAutoTranslateEnabled = isChecked
-            prefs.edit().putBoolean(PREF_AUTO_TRANSLATE_ENABLED, isChecked).apply()
+    
+    private fun setupOnlyShowOnInputSwitch() {
+        val isOnlyShowOnInput = prefs.getBoolean(PREF_ONLY_SHOW_ON_INPUT, false)
+        binding.onlyShowOnInputSwitch.isChecked = isOnlyShowOnInput
+        
+        binding.onlyShowOnInputSwitch.setOnCheckedChangeListener { _, isChecked ->
+            Logger.ui("Only show on input switch toggled: $isChecked")
+            prefs.edit().putBoolean(PREF_ONLY_SHOW_ON_INPUT, isChecked).apply()
             
             // Show confirmation toast
             val message = if (isChecked) {
-                "Audio will be automatically translated to selected language"
+                "Floating button will only show when an input field is selected"
             } else {
-                "Auto-translate disabled"
+                "Floating button will always be visible"
             }
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
             
-            // Enable/disable language dropdown based on auto-translate setting
-            binding.languageInputLayout.isEnabled = isChecked
-        }
-        
-        // Set initial state of language dropdown
-        binding.languageInputLayout.isEnabled = isAutoTranslateEnabled
-    }
-    
-    private fun setupLanguageSpinner() {
-        val languages = arrayOf("German", "French", "Spanish", "Italian", "Japanese", "Chinese", "Russian")
-        
-        // Create adapter for the AutoCompleteTextView
-        val adapter = ArrayAdapter(
-            requireContext(),
-            R.layout.item_spinner_dropdown,
-            languages
-        )
-        
-        // Set up the AutoCompleteTextView with the adapter
-        binding.languageDropdown.setAdapter(adapter)
-        
-        // Set initial value
-        binding.languageDropdown.setText(selectedLanguage, false)
-        
-        // Set listener for item selection
-        binding.languageDropdown.setOnItemClickListener { _, _, position, _ ->
-            selectedLanguage = languages[position]
-            prefs.edit().putString(PREF_SELECTED_LANGUAGE, selectedLanguage).apply()
-            Logger.ui("Language selected: $selectedLanguage")
-        }
-        
-        // Enable/disable based on auto-translate setting
-        binding.languageInputLayout.isEnabled = isAutoTranslateEnabled
-    }
-    
-    private fun setupAutoDetectLanguageSwitch() {
-        // Get current value from preferences
-        val isAutoDetectLanguageEnabled = prefs.getBoolean(PREF_AUTO_DETECT_LANGUAGE_ENABLED, true)
-        
-        // Set initial state of the switch
-        binding.switchAutoDetectLanguage.isChecked = isAutoDetectLanguageEnabled
-        
-        // Show/hide the language dropdown based on auto-detect setting
-        binding.languageInputLayoutWhenAutoDetectOff.visibility = 
-            if (isAutoDetectLanguageEnabled) View.GONE else View.VISIBLE
-        
-        // Set up listener for switch changes
-        binding.switchAutoDetectLanguage.setOnCheckedChangeListener { _, isChecked ->
-            Logger.ui("Auto-detect language switch toggled: $isChecked")
-            
-            // Save to preferences
-            prefs.edit().putBoolean(PREF_AUTO_DETECT_LANGUAGE_ENABLED, isChecked).apply()
-            
-            // Show/hide the language dropdown based on auto-detect setting
-            binding.languageInputLayoutWhenAutoDetectOff.visibility = 
-                if (isChecked) View.GONE else View.VISIBLE
-            
-            // Show confirmation toast
-            val message = if (isChecked) {
-                "Language will be automatically detected in recordings"
-            } else {
-                "Language must be manually selected for recordings"
+            // Update the floating button service if it's running
+            if (isFloatingButtonVisible) {
+                val intent = Intent(requireContext(), FloatingButtonService::class.java)
+                requireContext().startService(intent)
             }
-            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
         }
     }
     
     private fun setupAutoDeleteSwitch() {
+        // Set up the spinner for auto-delete period selection
+        val spinner = binding.autoDeletePeriodSpinner
+        val periods = resources.getStringArray(R.array.auto_delete_periods)
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, periods)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinner.adapter = adapter
+        
+        // Set the initial selection based on saved preference
+        val periodIndex = periods.indexOf(autoDeletePeriod)
+        if (periodIndex >= 0) {
+            spinner.setSelection(periodIndex)
+        }
+        
+        // Update spinner visibility based on auto-delete state
+        spinner.visibility = if (isAutoDeleteEnabled) View.VISIBLE else View.GONE
+        
+        // Set up the switch
         binding.autoDeleteSwitch.isChecked = isAutoDeleteEnabled
         binding.autoDeleteSwitch.setOnCheckedChangeListener { _, isChecked ->
             Logger.ui("Auto-delete switch toggled: $isChecked")
             isAutoDeleteEnabled = isChecked
             prefs.edit().putBoolean(PREF_AUTO_DELETE_ENABLED, isChecked).apply()
+            
+            // Show/hide the period dropdown
+            spinner.visibility = if (isChecked) View.VISIBLE else View.GONE
+            
+            // Update the description text
+            updateAutoDeleteDescription()
             
             // Show confirmation toast
             val message = if (isChecked) {
@@ -428,139 +310,48 @@ class SettingsFragment : Fragment() {
                 "Auto-delete disabled"
             }
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-            
-            // Enable/disable period dropdown based on auto-delete setting
-            binding.autoDeletePeriodInputLayout.isEnabled = isChecked
         }
         
-        // Set initial state of period dropdown
-        binding.autoDeletePeriodInputLayout.isEnabled = isAutoDeleteEnabled
-    }
-    
-    private fun setupAutoDeletePeriodSpinner() {
-        val periods = arrayOf("1 hour", "4 hours", "1 day", "1 week", "1 month", "3 months", "6 months", "1 year")
-        
-        // Create adapter for the AutoCompleteTextView
-        val adapter = ArrayAdapter(
-            requireContext(),
-            R.layout.item_spinner_dropdown,
-            periods
-        )
-        
-        // Set up the AutoCompleteTextView with the adapter
-        binding.autoDeletePeriodDropdown.setAdapter(adapter)
-        
-        // Set initial value
-        binding.autoDeletePeriodDropdown.setText(autoDeletePeriod, false)
-        
-        // Set listener for item selection
-        binding.autoDeletePeriodDropdown.setOnItemClickListener { _, _, position, _ ->
-            autoDeletePeriod = periods[position]
-            prefs.edit().putString(PREF_AUTO_DELETE_PERIOD, autoDeletePeriod).apply()
-            Logger.ui("Auto-delete period selected: $autoDeletePeriod")
+        // Set up spinner listener
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val selectedPeriod = periods[position]
+                if (selectedPeriod != autoDeletePeriod) {
+                    Logger.ui("Auto-delete period changed: $selectedPeriod")
+                    autoDeletePeriod = selectedPeriod
+                    prefs.edit().putString(PREF_AUTO_DELETE_PERIOD, selectedPeriod).apply()
+                    
+                    // Update the description text
+                    updateAutoDeleteDescription()
+                    
+                    // Show confirmation toast if auto-delete is enabled
+                    if (isAutoDeleteEnabled) {
+                        val message = "Notes will be automatically deleted after $autoDeletePeriod"
+                        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
             
-            // Update toast message if auto-delete is enabled
-            if (isAutoDeleteEnabled) {
-                Toast.makeText(requireContext(), "Notes will be automatically deleted after $autoDeletePeriod", Toast.LENGTH_SHORT).show()
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // Nothing to do
             }
         }
         
-        // Enable/disable based on auto-delete setting
-        binding.autoDeletePeriodInputLayout.isEnabled = isAutoDeleteEnabled
+        // Initialize the description text
+        updateAutoDeleteDescription()
     }
-
-    private fun updateAccessibilityServiceStatus() {
-        val isAccessibilityEnabled = AccessibilityUtils.isAccessibilityServiceEnabled(requireContext())
-        
-        // Show/hide the appropriate views
-        binding.accessibilityPermissionStatus.visibility = if (isAccessibilityEnabled) View.VISIBLE else View.GONE
-        binding.accessibilitySettingsButton.visibility = if (isAccessibilityEnabled) View.GONE else View.VISIBLE
-        
-        // Update the status text
-        binding.accessibilityServiceStatus.text = if (isAccessibilityEnabled) {
-            "Accessibility service enabled"
+    
+    private fun updateAutoDeleteDescription() {
+        binding.autoDeleteDescription.text = if (isAutoDeleteEnabled) {
+            "Automatically delete notes after $autoDeletePeriod"
         } else {
-            "Accessibility service required for auto-insert"
+            "Automatically delete notes after selected time"
         }
-        
-        Logger.ui("Accessibility service status updated: $isAccessibilityEnabled")
-    }
-
-    private fun updateFloatingButtonToggle() {
-        val hasOverlayPermission = Settings.canDrawOverlays(requireContext())
-        val hasNotificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requireContext().checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        } else {
-            true
-        }
-        
-        binding.toggleFloatingButton.text = if (isFloatingButtonVisible) "Hide" else "Show"
-        binding.toggleFloatingButton.isEnabled = hasOverlayPermission
-        
-        if (!hasOverlayPermission) {
-            binding.toggleFloatingButton.text = "Overlay Permission Required"
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotificationPermission) {
-            // Make it clear that notification permission is optional
-            binding.toggleFloatingButton.isEnabled = true
-            binding.toggleFloatingButton.text = if (isFloatingButtonVisible) "Hide" else "Show (No Notification)"
-        }
-        
-        Logger.ui("Floating button toggle updated: $isFloatingButtonVisible, enabled: ${binding.toggleFloatingButton.isEnabled}")
-    }
-
-    private fun toggleFloatingButton() {
-        isFloatingButtonVisible = !isFloatingButtonVisible
-        prefs.edit().putBoolean(PREF_FLOATING_BUTTON_VISIBLE, isFloatingButtonVisible).apply()
-        
-        if (isFloatingButtonVisible) {
-            startFloatingButtonService()
-        } else {
-            stopFloatingButtonService()
-        }
-        
-        updateFloatingButtonToggle()
-    }
-
-    private fun startFloatingButtonService() {
-        val hasOverlayPermission = Settings.canDrawOverlays(requireContext())
-        if (!hasOverlayPermission) {
-            Toast.makeText(requireContext(), "Overlay permission is required", Toast.LENGTH_SHORT).show()
-            return
-        }
-        
-        // Create intent for the service
-        val intent = Intent(requireContext(), FloatingButtonService::class.java)
-        
-        // Start as foreground service for Android O and above
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            requireContext().startForegroundService(intent)
-            Logger.ui("Started floating button as foreground service")
-        } else {
-            requireContext().startService(intent)
-            Logger.ui("Started floating button service")
-        }
-        
-        Toast.makeText(requireContext(), "Floating button enabled", Toast.LENGTH_SHORT).show()
-        Logger.ui("Floating button service started")
-    }
-
-    private fun stopFloatingButtonService() {
-        requireContext().stopService(Intent(requireContext(), FloatingButtonService::class.java))
-        Toast.makeText(requireContext(), "Floating button disabled", Toast.LENGTH_SHORT).show()
-        Logger.ui("Floating button service stopped")
-    }
-
-    private fun hasRequiredPermissions(): Boolean {
-        val hasAudioPermission = requireContext().checkSelfPermission(Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        val hasOverlayPermission = Settings.canDrawOverlays(requireContext())
-        
-        // Notification permission is now optional
-        return hasAudioPermission && hasOverlayPermission
     }
 
     private fun setupTagAudioEventsSwitch() {
-        binding.switchTagAudioEvents.isChecked = isTagAudioEventsEnabled
-        binding.switchTagAudioEvents.setOnCheckedChangeListener { _, isChecked ->
+        binding.tagAudioEventsSwitch.isChecked = isTagAudioEventsEnabled
+        binding.tagAudioEventsSwitch.setOnCheckedChangeListener { _, isChecked ->
             Logger.ui("Tag audio events switch toggled: $isChecked")
             isTagAudioEventsEnabled = isChecked
             prefs.edit().putBoolean(PREF_TAG_AUDIO_EVENTS_ENABLED, isChecked).apply()
@@ -574,15 +365,37 @@ class SettingsFragment : Fragment() {
             Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
         }
     }
+    
+    private fun setupAboutSection() {
+        // Set up FAQ row
+        binding.faqRow.setOnClickListener {
+            // Open FAQ page (for demo, we'll just show a toast)
+            Toast.makeText(requireContext(), "Opening FAQ page", Toast.LENGTH_SHORT).show()
+        }
+        
+        // Set up Request a change row
+        binding.requestChangeRow.setOnClickListener {
+            // Open request change page (for demo, we'll just show a toast)
+            Toast.makeText(requireContext(), "Opening request change page", Toast.LENGTH_SHORT).show()
+        }
+        
+        // Set up Logout row
+        binding.logoutRow.setOnClickListener {
+            // Logout (for demo, we'll just show a toast)
+            Toast.makeText(requireContext(), "Logging out", Toast.LENGTH_SHORT).show()
+        }
+        
+        // Set up Delete account row
+        binding.deleteAccountRow.setOnClickListener {
+            // Delete account (for demo, we'll just show a toast)
+            Toast.makeText(requireContext(), "Deleting account", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onResume() {
         super.onResume()
-        // Update permission buttons when returning to the fragment
-        updateAudioPermissionButton()
-        updateOverlayPermissionButton()
-        updateNotificationPermissionButton()
-        updateAccessibilityServiceStatus()
-        updateFloatingButtonToggle()
+        // Update permission status when returning to the fragment
+        setupPermissionsSection()
     }
 
     override fun onDestroyView() {
